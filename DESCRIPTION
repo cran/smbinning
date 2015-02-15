@@ -1,0 +1,15 @@
+Package: smbinning
+Title: Optimal Binning for Scoring Modeling
+Version: 0.1
+Author: Herman R. Jopia Bonnet
+Maintainer: Herman Jopia <hjopia@gmail.com>
+URL: http://www.scoringmodeling.com/rpackage/smbinning
+Description: In its core, smbinning categorizes a numeric variable into buckets for ulterior usage in scoring modeling. Its purpose is to automate, as much as possible, the time consuming process of generating predictive characteristics, and also document SQL codes, tables and plots used during the development stage.
+Depends: R (>= 3.1.2),sqldf,partykit,Formula
+Imports: gsubfn
+License: GPL (>= 2)
+LazyData: true
+Packaged: 2015-02-15 06:17:12 UTC; Owner
+NeedsCompilation: no
+Repository: CRAN
+Date/Publication: 2015-02-15 09:59:19

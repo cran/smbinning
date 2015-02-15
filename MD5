@@ -1,0 +1,9 @@
+55e9a0034998093004f8be260781db5c *DESCRIPTION
+6d45f8f6d104a971d094101bd5e9840d *NAMESPACE
+036fa3732e2db36131caa662f4c55376 *R/smbinning.R
+1f7f5ba9c1463ae5d0b536d932725d01 *data/chileancredit.RData
+1010f2423278a8effc4ae9b8a9bbd06c *man/chileancredit.Rd
+ecbad219b426fc4fc075a677d07e7043 *man/smbinning.Rd
+1b4703be5fe28688bd2cd102e444780b *man/smbinning.gen.Rd
+30602f2331be371c86dde2111930e817 *man/smbinning.plot.Rd
+8842615d40697ccdb8244b7a68b1efd2 *man/smbinning.sql.Rd
