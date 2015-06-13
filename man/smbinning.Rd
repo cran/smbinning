@@ -2,16 +2,18 @@
 % Please edit documentation in R/smbinning.R
 \name{smbinning}
 \alias{smbinning}
-\title{Optimal Binning for Scoring Modeling.}
+\title{Optimal Binning for Scoring Modeling}
 \usage{
 smbinning(df, y, x, p = 0.05)
 }
 \arguments{
 \item{df}{A data frame.}
 
-\item{y}{Binary response variable (0,1). Integer (\code{int}) is required.}
+\item{y}{Binary response variable (0,1). Integer (\code{int}) is required.
+Name of \code{y} must not have a dot.}
 
-\item{x}{Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed.}
+\item{x}{Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed.
+Name of \code{x} must not have a dot.}
 
 \item{p}{Percentage of records per bin. Default 5\% (0.05).
 This parameter only accepts values greater that 0.00 (0\%) and lower than 0.5 (50\%).}
@@ -24,10 +26,9 @@ with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 \description{
 \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
 This process, also known as \emph{supervised discretization},
-utilizes \href{http://cran.r-project.org/web/packages/partykit}{Recursive Partitioning} to categorize
+utilizes \href{http://cran.r-project.org/package=partykit}{Recursive Partitioning} to categorize
 the numeric characteristic.\cr
-The especific algorithm is
-\href{http://cran.r-project.org/web/packages/partykit/vignettes/ctree.pdf}{Conditional Inference Trees}
+The especific algorithm is Conditional Inference Trees
 which initially excludes missing values (\code{NA}) to compute the cutpoints, adding them back later in the
 process for the calculation of the \emph{Information Value}.
 }

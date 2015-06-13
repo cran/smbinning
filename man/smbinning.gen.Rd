@@ -2,7 +2,7 @@
 % Please edit documentation in R/smbinning.R
 \name{smbinning.gen}
 \alias{smbinning.gen}
-\title{Utility to generate a new characteristic.}
+\title{Utility to generate a new characteristic}
 \usage{
 smbinning.gen(df, ivout, chrname = "NewChar")
 }
