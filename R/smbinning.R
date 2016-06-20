@@ -9,11 +9,11 @@
 #' process for the calculation of the \emph{Information Value}.
 #' @param df A data frame.
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
-#' Name of \code{y} must not have a dot.
+#' Name of \code{y} must not have a dot. Name "default" is not allowed.
 #' @param x Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed.
 #' Name of \code{x} must not have a dot.
 #' @param p Percentage of records per bin. Default 5\% (0.05). 
-#' This parameter only accepts values greater that 0.00 (0\%) and lower than 0.5 (50\%).
+#' This parameter only accepts values greater that 0.00 (0\%) and lower than 0.50 (50\%).
 #' @return The command \code{smbinning} generates and object containing the necessary info and utilities for binning.
 #' The user should save the output result so it can be used 
 #' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
@@ -37,11 +37,11 @@
 smbinning = function(df,y,x,p=0.05){
   # Check data frame and formats
   if (!is.data.frame(df)){ # Check if data.frame
-    return("Data is not a data.frame")
+    return("Data not a data.frame")
   } else if (is.numeric(y) | is.numeric(x)){ # Check if target variable is numeric
-    return("Characteristic name not string")
+    return("Column name not string")
   } else if (grepl("[.]",y) | grepl("[.]",x)){ # Check if there is a dot
-    return("Name of a characteristic must not have a dot [.]")
+    return("Column name with a dot [.]")
     } else 
     i=which(names(df)==y) # Find Column for dependant
   j=which(names(df)==x) # Find Column for independant
@@ -49,6 +49,8 @@ smbinning = function(df,y,x,p=0.05){
     return("Target (y) not found or it is not numeric")
   } else if (max(df[,i],na.rm=T)!=1){
     return("Maximum not 1")
+  } else if (tolower(y)=="default"){
+    return("Field name 'default' not allowed")
   } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'")>0){
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")  
   } else if (min(df[,i],na.rm=T)!=0){
@@ -58,24 +60,25 @@ smbinning = function(df,y,x,p=0.05){
   } else if (!is.numeric(df[,j])){
     return("Characteristic (x) not found or it is not a number")
   } else if (length(unique(df[,j]))<10){
-    return("Characteristic (x) has less than 10 uniques values")  
+    return("Uniques values of x < 10")  
   } else { 
     ctree=ctree(formula(paste(y,"~",x)),
                 data=df, 
                 na.action=na.exclude,
                 control=ctree_control(minbucket=ceiling(round(p*nrow(df)))))
     bins=width(ctree)
-    if (bins<2){return("No Bins")}
-    # Append cutpoints in a table (Automated)
+    if (bins<2){return("No significant splits")}
+    # Append cutpoinstop()ts in a table (Automated)
     cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
     n=length(ctree) # Number of nodes
     for (i in 1:n) {
       cutvct=rbind(cutvct,ctree[i]$node$split$breaks)
     }
     cutvct=cutvct[order(cutvct[,1]),] # Sort / converts to a ordered vector (asc)
+    cutvct=ifelse(cutvct<0,trunc(10000*cutvct)/10000,ceiling(10000*cutvct)/10000) # Round to 4 dec. to avoid borderline cases
     # Build Information Value Table #############################################
     # Counts per not missing cutpoint
-    ivt=data.frame(matrix(ncol=0,nrow=0)) # Shell
+    ivt=data.frame(matrix(ncol=0,nrow=0)) # Empty table
     n=length(cutvct) # Number of cutpoits
     for (i in 1:n) {
       cutpoint=cutvct[i]
@@ -99,10 +102,13 @@ smbinning = function(df,y,x,p=0.05){
                 )
     }
     cutpoint=max(df[,j],na.rm=T) # Calculte Max without Missing
+    cutpoint=ifelse(cutpoint<0,trunc(10000*cutpoint)/10000,ceiling(10000*cutpoint)/10000) # Round to 4 dec. to avoid borderline cases
+    maxcutpoint=max(cutvct) # Calculte Max cut point
     mincutpoint=min(df[,j],na.rm=T) # Calculte Min without Missing for later usage
+    mincutpoint=ifelse(mincutpoint<0,trunc(10000*mincutpoint)/10000,ceiling(10000*mincutpoint)/10000) # Round to 4 dec. to avoid borderline cases 
     ivt=rbind(ivt,
               fn$sqldf(
-                "select '<= $cutpoint' as Cutpoint,
+                "select '> $maxcutpoint' as Cutpoint,
                 NULL as CntRec,
                 NULL as CntGood,
                 NULL as CntBad,
@@ -167,11 +173,13 @@ smbinning = function(df,y,x,p=0.05){
               )
     
     # Covert to table numeric
+    options(warn=-1)
     ncol=ncol(ivt)
     for (i in 2:ncol){
       ivt[,i]=as.numeric(ivt[,i])
     }
-    
+    options(warn=0)
+
     # Complete Table 
     ivt[1,2]=ivt[1,5] # Nbr Records
     ivt[1,3]=ivt[1,6] # Nbr Goods
@@ -220,7 +228,240 @@ smbinning = function(df,y,x,p=0.05){
   list(ivtable=ivt,iv=iv,ctree=ctree,bands=bands,x=x,col_id=j,cuts=cutvct)
   }
 
-# Begin Custom Cutpoints 20150307 #############################################
+# Begin Summary IV 20160602 ###############################################
+#' Information value Summary
+#'
+#' It gives the user the ability to calculate, in one step, the IV for each characteristic of the dataset.
+#' This function also shows a progress bar so the user can see the status of the process.
+#' @param df A data frame.
+#' @param y Binary response variable (0,1). Integer (\code{int}) is required.
+#' Name of \code{y} must not have a dot. Name "default" is not allowed.
+#' @return The command \code{smbinning.sumiv} generates a table that lists each characteristic 
+#' with its corresponding IV for those where the calculation is possible, otherwise it will generate a 
+#' missing value (\code{NA}).
+#' @examples
+#' # Package loading and data exploration
+#' library(smbinning) # Load package and its data
+#' data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
+#'  
+#' # Training and testing samples (Just some basic formality for Modeling) 
+#' chileancredit.train=subset(chileancredit,FlagSample==1)
+#' chileancredit.test=subset(chileancredit,FlagSample==0)
+#'  
+#' # Summary IV application
+#' sumivt=smbinning.sumiv(chileancredit.train,y="FlagGB")
+#' sumivt # Display table with IV by characteristic
+
+smbinning.sumiv = function(df,y){
+  # Check data frame and formats
+  if (!is.data.frame(df)){ # Check if data.frame
+    return("Data not a data.frame")}  
+  ncol=ncol(df)
+  sumivt=data.frame(matrix(ncol=0,nrow=0)) # Empty table
+  options(warn=-1) # Turn off warnings
+  cat("","\n")
+  pb = txtProgressBar(min = 0, max = 1, initial = 0, style=3, char = "-",width=50)
+  # t0=Sys.time()
+  # t1=0
+  for (i in 1:ncol){
+    smbnum=smbinning(df,y,colnames(df[i]))
+    smbfac=smbinning.factor(df,y,colnames(df[i]))
+    if (colnames(df[i])!=y) {
+      if (is.numeric(df[,i]) & is.list(smbnum)) {sumivt=rbind(sumivt,data.frame(Char=colnames(df[i]), IV=smbnum$iv, Process="Numeric binning OK"))}
+      else if (is.numeric(df[,i]) & !is.list(smbnum)) {sumivt=rbind(sumivt,data.frame(Char=colnames(df[i]), IV=NA, Process=smbnum))}
+      else if (is.factor(df[,i]) & is.list(smbfac)) {sumivt=rbind(sumivt,data.frame(Char=colnames(df[i]), IV=smbfac$iv, Process="Factor binning OK"))}
+      else if (is.factor(df[,i]) & !is.list(smbfac)) {sumivt=rbind(sumivt,data.frame(Char=colnames(df[i]), IV=NA,Process=smbfac))}
+      else {sumivt=rbind(sumivt,data.frame(Char=colnames(df[i]),IV=NA,Process="Not numeric nor factor"))}
+      # t1=Sys.time() # Recall system time
+      # t1=round(t1-t0,2) # Compares against starting time t0
+    }
+    setTxtProgressBar(pb, i/ncol)
+    # if(i<ncol) 
+    # {cat(" | Time:",t1,"| Binning",substring(colnames(df[i]),1,10),"...")} 
+    # else {cat(" | Time:",t1,"| Binning Done           ")} 
+  }
+  close(pb)
+  options(warn=0) # Turn back on warnings
+  sumivt=sumivt[with(sumivt,order(-IV)),]
+  cat("","\n")
+  return(sumivt)
+}
+
+# End Summary IV 20160602 #################################################
+
+
+# Begin Plot Summary IV 20160602 ##########################################
+#' Plot Information Value Summary
+#'
+#' It gives the user the ability to plot the Information Value by characteristic.
+#' The chart only shows characteristics with a valid IV.
+#' @param sumivt A data frame saved after \code{smbinning.sumiv}.
+#' @param cex Optional parameter for the user to control the font size of the characteristics
+#' displayed on the chart. The default value is 0.9
+#' @return The command \code{smbinning.sumiv.plot} returns a plot that shows the IV
+#' for each numeric and factor characteristic in the dataset.
+#' @examples
+#' # Package loading and data exploration
+#' library(smbinning) # Load package and its data
+#' data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
+#'  
+#' # Training and testing samples (Just some basic formality for Modeling) 
+#' chileancredit.train=subset(chileancredit,FlagSample==1)
+#' chileancredit.test=subset(chileancredit,FlagSample==0)
+#'  
+#' # Plotting smbinning.sumiv
+#' sumivt=smbinning.sumiv(chileancredit.train,y="FlagGB")
+#' sumivt # Display table with IV by characteristic
+#' smbinning.sumiv.plot(sumivt,cex=0.8) # Plot IV summary table
+
+smbinning.sumiv.plot=function(sumivt, cex=0.9){
+  if (!is.data.frame(sumivt)){ # Check if data.frame
+    return("Data not a data.frame")
+  } else if (names(sumivt[1])!="Char" | names(sumivt[2])!="IV") {
+    return("Not from smbinning.sumiv")}
+  sumivtplot=sumivt
+  sumivtplot=sumivtplot[complete.cases(sumivtplot$IV),]
+  sumivtplot=sumivtplot[order(sumivtplot$IV),]
+  sumivtplot=cbind(sumivtplot,Desc=ifelse(sumivtplot$IV>=0.3,"1:Strong",ifelse(sumivtplot$IV>=0.1,"2:Medium","3:Weak")))
+  unique(sumivtplot$Desc)
+  sumivtplot$Desc=as.factor(sumivtplot$Desc)
+  smbsumivplot=dotchart(sumivtplot$IV, 
+                        main="Information Value",
+                        labels=sumivtplot$Char,
+                        pch=ifelse(sumivtplot$IV>=0.3,21,ifelse(sumivtplot$IV>=0.1,21,1)),
+                        color=ifelse(sumivtplot$IV>=0.3,"black",ifelse(sumivtplot$IV>=0.1,"black","black")),
+                        bg=ifelse(sumivtplot$IV>=0.3,"black",ifelse(sumivtplot$IV>=0.1,"gray75","white")),
+                        groups=sumivtplot$Desc,
+                        cex=cex)
+}
+
+# End Plot Summary IV 20160602 ############################################
+
+
+# Begin Exploratory Data Analysis 20160602 ################################
+#' Exploratory Data Analysis (EDA)
+#'
+#' It shows basic statistics for each numeric, integer, and factor characteristic in a data frame.
+#' @param df A data frame.
+#' @param rounding Optional parameter to define the decimal points shown in the output table. Default is 3.
+#' @param pbar Optional parameter that turns on or off a progress bar. Default value is 1 (On).
+#' @return The command \code{smbinning.eda} generates two data frames that list each characteristic 
+#' with basic statistics such as extreme values and quartiles;
+#' and also percentages of missing values and outliers, among others. 
+#' @examples
+#' # Package loading and data exploration
+#' library(smbinning) # Load package and its data
+#' data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
+#'  
+#' # Training and testing samples (Just some basic formality for Modeling) 
+#' chileancredit.train=subset(chileancredit,FlagSample==1)
+#' chileancredit.test=subset(chileancredit,FlagSample==0)
+#'  
+#' # EDA application
+#' smbinning.eda(chileancredit.train,rounding=3)$eda # Table with basic statistics.
+#' smbinning.eda(chileancredit.train,rounding=3)$edapct # Table with basic percentages.
+
+smbinning.eda = function(df, rounding=3, pbar=1){
+  # Check data frame and formats
+  if (!is.data.frame(df)){ # Check if data.frame
+    return("Data not a data.frame")}  
+  ncol=ncol(df)
+  nrow=nrow(df)
+  r=rounding
+  eda=data.frame(matrix(ncol=0,nrow=0)) # Empty table
+  options(scipen=999) # No scientific notation
+  options(warn=-1) # Turn off warnings
+  if (pbar==1){
+    cat("","\n")
+    pb = txtProgressBar(min = 0, max = 1, initial = 0, style=3, char = "-",width=50)
+  }
+  for (i in 1:ncol){
+    # t1=round(Sys.time()-t0,2)
+    Miss=sum(is.na(df[,i]))
+    if (is.numeric(df[,i]) | is.integer(df[,i])) {
+      q=unname(quantile(df[,i], na.rm=T))
+      iqr=q[4]-q[2]
+      iqrlow=q[2]-1.5*iqr
+      iqrupp=q[4]+1.5*iqr
+      Avg=mean(df[,i],na.rm=T)
+      eda=rbind(eda,data.frame(Field=colnames(df[i]),
+                               Type="Num/Int",
+                               Recs=nrow,
+                               Miss=Miss,
+                               Unique=length(unique((df[,i][!is.na(df[,i])]))),
+                               Min=round(q[1],r),
+                               Q25=round(q[2],r),
+                               Q50=round(q[3],r),
+                               Avg=round(Avg,r), 
+                               Q75=round(q[4],r),
+                               Max=round(q[5],r),
+                               StDv=round(sd(df[,i],na.rm=T),r),
+                               Neg=nrow(subset(df, df[,i]<0 & !is.na(df[,i]))),
+                               Zero=nrow(subset(df, df[,i]==0 & !is.na(df[,i]))),
+                               Pos=nrow(subset(df, df[,i]>0 & !is.na(df[,i]))),
+                               OutLo=nrow(subset(df,df[,i]<iqrlow)),
+                               OutHi=nrow(subset(df,df[,i]>iqrupp))
+      ))}
+    else if (is.factor(df[,i])) {
+      eda=rbind(eda,data.frame(Field=colnames(df[i]),
+                               Type="Factor",
+                               Recs=nrow,
+                               Miss=Miss,
+                               Unique=length(unique((df[,i][!is.na(df[,i])]))),
+                               Min=NA,
+                               Q25=NA,
+                               Q50=NA,
+                               Avg=NA,
+                               Q75=NA,
+                               Max=NA,
+                               StDv=NA,
+                               Neg=NA,
+                               Zero=NA,
+                               Pos=NA,
+                               OutLo=NA,
+                               OutHi=NA
+      ))}
+    else {
+      eda=rbind(eda,data.frame(Field=colnames(df[i]),
+                               Type="Other",
+                               Recs=nrow,
+                               Miss=Miss,
+                               Unique=length(unique((df[,i][!is.na(df[,i])]))),
+                               Min=NA,
+                               Q25=NA,
+                               Q50=NA,
+                               Avg=NA,
+                               Q75=NA,
+                               Max=NA,
+                               StDv=NA,
+                               Neg=NA,
+                               Zero=NA,
+                               Pos=NA,
+                               OutLo=NA,
+                               OutHi=NA
+      ))}
+    if (pbar==1){setTxtProgressBar(pb, i/ncol)}
+  }
+  
+  if (pbar==1){close(pb)}
+  
+  # Table with percentages (edapct)
+  edapct=cbind(eda[,1:4],eda[,13:17])
+  edapct[,4]=round(edapct[,4]/edapct[,3],r)
+  edapct[,5]=round(edapct[,5]/edapct[,3],r)
+  edapct[,6]=round(edapct[,6]/edapct[,3],r)
+  edapct[,7]=round(edapct[,7]/edapct[,3],r)
+  edapct[,8]=round(edapct[,8]/edapct[,3],r)
+  edapct[,9]=round(edapct[,9]/edapct[,3],r)
+  
+  options(warn=0) # Turn back on warnings
+  list(eda=eda,edapct=edapct)
+}
+
+# End Exploratory Data Analysis 20160602 ##################################
+
+
+# Begin Custom Cutpoints 20150307 #########################################
 #' Customized Binning
 #'
 #' It gives the user the ability to create customized cutpoints. In Scoring Modeling, the analysis
@@ -228,7 +469,7 @@ smbinning = function(df,y,x,p=0.05){
 #' and then intervals with the same proportion of cases to explore bins with a reasonable sample size.
 #' @param df A data frame.
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
-#' Name of \code{y} must not have a dot.
+#' Name of \code{y} must not have a dot. Name "default" is not allowed.
 #' @param x Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed. 
 #' Name of \code{x} must not have a dot.
 #' @param cuts Vector with the cutpoints selected by the user. It does not have a default so user must define it. 
@@ -265,11 +506,11 @@ smbinning = function(df,y,x,p=0.05){
 smbinning.custom = function(df,y,x,cuts){
   # Check data frame and formats
   if (!is.data.frame(df)){ # Check if data.frame
-    return("Data is not a data.frame")
+    return("Data not a data.frame")
   } else if (is.numeric(y) | is.numeric(x)){ # Check if target vable is numeric
-    return("Characteristic name not string")
+    return("Column name not string")
   } else if (grepl("[.]",y) | grepl("[.]",x)){ # Check if there is a dot
-    return("Name of a characteristic must not have a dot [.]")
+    return("Column name with a dot [.]")
   } else 
     i=which(names(df)==y) # Find Column for dependant
   j=which(names(df)==x) # Find Column for independant
@@ -277,6 +518,8 @@ smbinning.custom = function(df,y,x,cuts){
     return("Target (y) not found or it is not numeric")
   } else if (max(df[,i],na.rm=T)!=1){
     return("Maximum not 1")
+  } else if (tolower(y)=="default"){
+    return("Field name 'default' not allowed")
   } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'")>0){
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")  
   } else if (min(df[,i],na.rm=T)!=0){
@@ -284,7 +527,7 @@ smbinning.custom = function(df,y,x,cuts){
   } else if (!is.numeric(df[,j])){
     return("Characteristic (x) not found or it is not a number")
   } else if (length(unique(df[,j]))<10){
-    return("Characteristic (x) has less than 10 uniques values")  
+    return("Uniques values of x < 10")  
   } else { 
     # Append cutpoints in a table (Automated)
     cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
@@ -294,6 +537,7 @@ smbinning.custom = function(df,y,x,cuts){
       cutvct=rbind(cutvct,cuts[i])
     }
     cutvct=cutvct[order(cutvct[,1]),] # Sort / converts to a ordered vector (asc)
+    cutvct=ifelse(cutvct<0,trunc(10000*cutvct)/10000,ceiling(10000*cutvct)/10000) # Round to 4 dec. to avoid borderline cases
     # Build Information Value Table #############################################
     # Counts per not missing cutpoint
     ivt=data.frame(matrix(ncol=0,nrow=0)) # Shell
@@ -320,10 +564,13 @@ smbinning.custom = function(df,y,x,cuts){
                 )
     }
     cutpoint=max(df[,j],na.rm=T) # Calculte Max without Missing
+    cutpoint=ifelse(cutpoint<0,trunc(10000*cutpoint)/10000,ceiling(10000*cutpoint)/10000) # Round to 4 dec. to avoid borderline cases
+    maxcutpoint=max(cutvct) # Calculte Max cut point
     mincutpoint=min(df[,j],na.rm=T) # Calculte Min without Missing for later usage
+    mincutpoint=ifelse(mincutpoint<0,trunc(10000*mincutpoint)/10000,ceiling(10000*mincutpoint)/10000) # Round to 4 dec. to avoid borderline cases 
     ivt=rbind(ivt,
               fn$sqldf(
-                "select '= $cutpoint' as Cutpoint,
+                "select '> $maxcutpoint' as Cutpoint,
                 NULL as CntRec,
                 NULL as CntGood,
                 NULL as CntBad,
@@ -386,10 +633,12 @@ smbinning.custom = function(df,y,x,cuts){
               )
     
     # Covert to table numeric
+    options(warn=-1)
     ncol=ncol(ivt)
     for (i in 2:ncol){
       ivt[,i]=as.numeric(ivt[,i])
     }
+    options(warn=0)
     
     # Complete Table 
     ivt[1,2]=ivt[1,5] # Nbr Records
@@ -449,10 +698,11 @@ smbinning.custom = function(df,y,x,cuts){
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
 #' Name of \code{y} must not have a dot.
 #' @param x A factor variable with at least 2 different values. Value \code{Inf} is not allowed. 
+#' @param maxcat Specifies the maximum number of categories.  Default value is 10.
 #' Name of \code{x} must not have a dot.
 #' @return The command \code{smbinning.factor} generates and object containing the necessary info and utilities for binning.
 #' The user should save the output result so it can be used 
-#' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
+#' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 #' @examples
 #' # Package loading and data exploration
 #' library(smbinning) # Load package and its data
@@ -460,11 +710,6 @@ smbinning.custom = function(df,y,x,cuts){
 #' str(chileancredit) # Quick description of the data
 #' table(chileancredit$FlagGB) # Tabulate target variable
 #' 
-#' # Data transformation. Data type must be factor.
-#' chileancredit$IncomeLevel= factor(chileancredit$IncomeLevel, 
-#'                                   levels=c(0,1,2,3,4,5),
-#'                                   labels=c("00","01","02","03","04","05"))
-#'  
 #' # Training and testing samples (Just some basic formality for Modeling) 
 #' chileancredit.train=subset(chileancredit,FlagSample==1)
 #' chileancredit.test=subset(chileancredit,FlagSample==0)
@@ -484,14 +729,14 @@ smbinning.custom = function(df,y,x,cuts){
 #' smbinning.plot(result.test,option="dist",sub="Income Level (Test Sample)")
 #' smbinning.plot(result.test,option="badrate",sub="Income Level (Test Sample)")
 
-smbinning.factor = function(df,y,x){
+smbinning.factor = function(df,y,x,maxcat=10){
   # Check data frame and formats
   if (!is.data.frame(df)){ # Check if data.frame
-    return("Data is not a data.frame")
+    return("Data not a data.frame")
   } else if (is.numeric(y) | is.numeric(x)){ # Check if target vable is numeric
-    return("Characteristic name not string")
+    return("Column name not string")
   } else if (grepl("[.]",y) | grepl("[.]",x)){ # Check if there is a dot
-    return("Name of a characteristic must not have a dot [.]")
+    return("Column name with a dot [.]")
   } else 
     i=which(names(df)==y) # Find Column for dependant
   j=which(names(df)==x) # Find Column for independant
@@ -499,6 +744,8 @@ smbinning.factor = function(df,y,x){
     return("Target (y) not found or it is not numeric")
   } else if (max(df[,i],na.rm=T)!=1){
     return("Maximum not 1")
+  } else if (tolower(y)=="default"){
+    return("Field name 'default' not allowed")
   } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'")>0){
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")  
   } else if (min(df[,i],na.rm=T)!=0){
@@ -506,8 +753,10 @@ smbinning.factor = function(df,y,x){
   } else if (!is.factor(df[,j])){
     return("Characteristic (x) not found or it is not a factor")
   } else if (length(unique(df[,j]))<=1){
-    return("Characteristic (x) requires at leats 2 uniques values")  
-  } else { 
+    return("Characteristic (x) requires at leats 2 uniques categories")  
+  } else if (length(unique(df[,j]))>maxcat){
+    return("Too many categories")    
+    } else { 
     # Append cutpoints in a table (Automated)
     # cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
     cutvct=c()
@@ -527,7 +776,7 @@ smbinning.factor = function(df,y,x){
       cutpoint=cutvct[i]
       ivt=rbind(ivt,
                 fn$sqldf(
-                  "select '= $cutpoint' as Cutpoint,
+                  "select '= ''$cutpoint''' as Cutpoint,
                   sum(case when $x = '$cutpoint' and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x = '$cutpoint' and $y=1 then 1 else 0 end) as CntGood,
                   sum(case when $x = '$cutpoint' and $y=0 then 1 else 0 end) as CntBad,
@@ -591,11 +840,13 @@ smbinning.factor = function(df,y,x){
               )
     
     # Covert table to numeric
+    options(warn=-1)
     ncol=ncol(ivt)
     for (i in 2:ncol){
       ivt[,i]=as.numeric(ivt[,i])
     }
-    
+    options(warn=0)
+
     # Complete Table: 1st row 
     ivt[1,5]=ivt[1,2] # Nbr Cum. Records
     ivt[1,6]=ivt[1,3] # Nbr Cum. Goods
@@ -731,7 +982,7 @@ smbinning.plot=function(ivout,option="dist",sub=""){
 # End Plotting ################################################################
 
 # Begin Gen Characteristic #####################################################
-#' Utility to generate a new characteristic
+#' Utility to generate a new characteristic from a numeric variable
 #'
 #' It generates a data frame with a new predictive characteristic after the binning process.
 #' @param df Dataset to be updated with the new characteristic.
@@ -757,16 +1008,100 @@ smbinning.gen=function(df,ivout,chrname="NewChar"){
   df=cbind(df,tmpname=NA)
   ncol=ncol(df)
   col_id=ivout$col_id
-  df[,ncol][df[,col_id]>=ivout$bands[1] & df[,col_id]<=ivout$bands[2]]=paste(sprintf("%02d",0),ivout$x,"<=",ivout$bands[2])
-  dim=length(ivout$bands)-1
-  for (i in 2:dim){
-    df[,ncol][df[,col_id]>ivout$bands[i] & df[,col_id]<=ivout$bands[i+1]]=paste(sprintf("%02d",i-1),ivout$x,"<=",ivout$bands[i+1])
+  # Updated 20160130
+  b=ivout$bands
+  df[,ncol][is.na(df[,col_id])]=0 # Missing
+  df[,ncol][df[,col_id]<=b[2]]=1 # First valid
+  # Loop goes from 2 to length(b)-2 if more than 1 cutpoint
+  if (length(b)>3) {
+  for (i in 2:(length(b)-2)) {
+    df[,ncol][df[,col_id]>b[i] & df[,col_id]<=b[i+1]]=i
   }
-  df[,ncol][is.na(df[,col_id])]=paste("99",ivout$x,"Is Null")
+  }
+  df[,ncol][df[,col_id]>b[length(b)-1]]=length(b)-1 # Last
+  df[,ncol]=as.factor(df[,ncol]) # Convert to factor for modeling
+  blab=c(paste("01 <=",b[2]))
+  if (length(b)>3) {
+  for (i in 3:(length(b)-1)) {
+    blab=c(blab,paste(sprintf("%02d",i-1),"<=",b[i]))
+  }
+  } else {i=2}
+  blab=c(blab,paste(sprintf("%02d",i),">",b[length(b)-1]))
+  
+  # Are there ANY missing values
+  # any(is.na(df[,col_id]))
+  
+  if (any(is.na(df[,col_id]))){
+    blab=c("00 Miss",blab)
+  }
+  df[,ncol]=factor(df[,ncol],labels=blab)
+  
   names(df)[names(df)=="tmpname"]=chrname
   return(df)
 }
 # End Gen Characteristic #######################################################
+
+
+# Begin Gen Characteristic for factor variables ################################
+#' Utility to generate a new characteristic from a factor variable
+#'
+#' It generates a data frame with a new predictive characteristic from a factor variable after the binning process.
+#' @param df Dataset to be updated with the new characteristic.
+#' @param ivout An object generated after \code{smbinning.factor}.
+#' @param chrname Name of the new characteristic.
+#' @return A data frame with the binned version of the characteristic analyzed with \code{smbinning.factor}.
+#' @examples
+#' # Package loading and data exploration
+#' library(smbinning) # Load package and its data
+#' data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
+#' chileancredit.train=subset(chileancredit,FlagSample==1)
+#' chileancredit.test=subset(chileancredit,FlagSample==0)
+#' result=
+#' smbinning.factor(df=chileancredit.train,y="FlagGB",x="IncomeLevel")
+#' result$ivtable
+#' 
+#' # Generate new binned characteristic into a existing data frame
+#' chileancredit=
+#'   smbinning.factor.gen(chileancredit,result,"gInc") # Update population
+
+smbinning.factor.gen=function(df,ivout,chrname="NewChar"){
+  df=cbind(df,tmpname=NA)
+  ncol=ncol(df)
+  col_id=ivout$col_id
+  # Updated 20160523
+  b=ivout$cuts
+  df[,ncol][is.na(df[,col_id])]=0 # Missing
+  # df[,ncol][df[,col_id]<=b[2]]=1 # First valid
+  # Loop through all factor values
+  for (i in 1:length(b)) {
+    df[,ncol][df[,col_id]==b[i]]=i
+  }
+  df[,ncol]=as.factor(df[,ncol]) # Convert to factor for modeling
+  
+  #Labeling
+  blab=c(paste("01 =  '",b[1],"'"))
+  for (i in 2:length(b)) {
+    blab=c(blab,paste(sprintf("%02d",i),"=  '",b[i],"'"))
+  }
+  
+  # Are there ANY missing values
+  # any(is.na(df[,col_id]))
+  
+  if (any(is.na(df[,col_id]))){
+    blab=c("00 Miss",blab)
+  }
+
+  # Some Make Up
+  blab=gsub(" '","'",blab)
+  blab=gsub("' ","'",blab)
+  
+  df[,ncol]=factor(df[,ncol],labels=blab)
+  
+  names(df)[names(df)=="tmpname"]=chrname
+  return(df)
+}
+# End Gen Characteristic for factor variables #################################
+
 
 # Begin: SQL Code #############################################################
 #' SQL Code
@@ -790,7 +1125,7 @@ smbinning.sql=function(ivout){
   sqlcodetable=as.list(matrix(ncol=0,nrow=0))
   sqlcodetable=rbind("case")
   for (k in 1:lines){
-    sqlcodetable=rbind(sqlcodetable,paste("when",ivout$x,ivout$ivtable[k,1],"then","'",sprintf("%02d",k),":",ivout$x,ivout$ivtable[k,1],"'"))
+    sqlcodetable=rbind(sqlcodetable,paste("when",ivout$x,ivout$ivtable[k,1],"then","'",sprintf("%02d",k),":",ivout$x,gsub("'","",ivout$ivtable[k,1]),"'"))
   }
   sqlcodetable=rbind(sqlcodetable,paste("when",ivout$x,"Is Null then","'",ivout$x,"Is Null'"))
   sqlcodetable=rbind(sqlcodetable,paste("else '99: Error' end"))
@@ -799,9 +1134,12 @@ smbinning.sql=function(ivout){
   sqlcodetable=gsub(" '","'",sqlcodetable)
   sqlcodetable=gsub("' ","'",sqlcodetable)
   sqlcodetable=gsub("then","then ",sqlcodetable)
+  sqlcodetable=gsub("'then","' then ",sqlcodetable)
+  sqlcodetable=gsub("then  ","then ",sqlcodetable)
   sqlcodetable=gsub("else","else ",sqlcodetable)
   sqlcodetable=gsub("'end","' end ",sqlcodetable)
   sqlcodetable=gsub(" :",":",sqlcodetable)
+  sqlcodetable=gsub("='","= '",sqlcodetable)
   return(gsub(",","",toString(sqlcodetable)))
 }
 # End: SQL Code ###############################################################
@@ -818,30 +1156,17 @@ smbinning.sql=function(ivout){
 #' \itemize{
 #'   \item CustomerId. Customer Identifier.
 #'   \item TOB. Time on books in months since first account was open.
-#'   \item IncomeLevel. Income level from 00 (Low) to 05 (High).
-#'   \item RevAccts. Number of open revolving accounts.
-#'   \item InsAccs. Number of open installment accounts.
-#'   \item RevBal. Outstanding balance in all open revolving accounts
-#'   \item InsBal. Outstanding balance in all open installment accounts
-#'   \item RevLim. Limit of all open revolving accounts
-#'   \item SavingsAmtL3M. Amount saved in the last 3 months.
-#'   \item Bal. Outstanding balance
+#'   \item IncomeLevel. Income level from 0 (Low) to 5 (High).
+#'   \item Bal. Outstanding balance.
 #'   \item MaxDqBin. Max. delinquency bin. 0:No Dq., 1:1-29 ... 6:150-179.
-#'   \item BureauBalDq1st. Outstanding balance 30-89 in Credit Bureau.
-#'   \item BureauBalDq2nd.Outstanding balance 90-179 in Credit Bureau.
-#'   \item BureauBalDq3rd.Outstanding balance 180+ in Credit Bureau.
-#'   \item CntOtherLenders. Numer of other lenders (Credit Bureau).
 #'   \item MtgBal. Mortgage outstanding balance at the Credit Bureau.
 #'   \item NonBankTradesDq. Number of non-bank delinquent trades.
-#'   \item Performance. Scoring model performance definition.
-#'   \item CatGBI. Exclusion (NULL), Bad (00), Indet. (01), Good (02).
 #'   \item FlagGB. 1: Good, 0: Bad.
-#'   \item Random. Uniformly distributed random value for sampling purposes.
-#'   \item FlagSample. Training and test sample indicator (1:75\%,0:25\%).
+#'   \item FlagSample. Training and testing sample indicator (1:75\%,0:25\%).
 #'   }
 #'
 #'
-#' @format Data frame with 29,519 rows and 57 columns.
+#' @format Data frame with 7,702 rows and 19 columns.
 #' @name chileancredit
 NULL
 # End: Chilean Credit Data ####################################################
