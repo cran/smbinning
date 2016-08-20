@@ -1007,7 +1007,11 @@ smbinning.plot=function(ivout,option="dist",sub=""){
 smbinning.gen=function(df,ivout,chrname="NewChar"){
   df=cbind(df,tmpname=NA)
   ncol=ncol(df)
-  col_id=ivout$col_id
+  
+  # Update 2016-08-20 MP
+  #col_id=ivout$col_id
+  col_id = which(names(df)==ivout$x) 
+  
   # Updated 20160130
   b=ivout$bands
   df[,ncol][is.na(df[,col_id])]=0 # Missing
