@@ -12,7 +12,7 @@ smbinning.custom(df, y, x, cuts)
 \item{y}{Binary response variable (0,1). Integer (\code{int}) is required.
 Name of \code{y} must not have a dot. Name "default" is not allowed.}
 
-\item{x}{Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed. 
+\item{x}{Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed. 
 Name of \code{x} must not have a dot.}
 
 \item{cuts}{Vector with the cutpoints selected by the user. It does not have a default so user must define it.}
@@ -23,36 +23,24 @@ The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 }
 \description{
-It gives the user the ability to create customized cutpoints. In Scoring Modeling, the analysis
-of a characteristic usually begins with intervals with the same length to understand its distribution,
-and then intervals with the same proportion of cases to explore bins with a reasonable sample size.
+It gives the user the ability to create customized cutpoints.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-str(chileancredit) # Quick description of the data
-table(chileancredit$FlagGB) # Tabulate target variable
- 
-# Training and testing samples (Just some basic formality for Modeling) 
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
+# Population, training and testing samples (Just some basic formality for Modeling) 
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit)
 
 # Remove exclusions from chileancredit dataset
-TOB.train=
-  subset(chileancredit,(FlagSample==1 & (FlagGB==1 | FlagGB==0)), select=TOB)
-TOB.test=
-  subset(chileancredit,(FlagSample==0 & (FlagGB==1 | FlagGB==0)), select=TOB)
-  
+LnTOBtrain=subset(train,(FlagGB==1 | FlagGB==0), select=LnTOB)
+
 # Custom cutpoints using percentiles (20\% each)
-TOB.Pct20=quantile(TOB.train, probs=seq(0,1,0.2), na.rm=TRUE)
-TOB.Pct20.Breaks=as.vector(quantile(TOB.train, probs=seq(0,1,0.2), na.rm=TRUE))
-Cuts.TOB.Pct20=TOB.Pct20.Breaks[2:(length(TOB.Pct20.Breaks)-1)]
+quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE) # See quantiles 
+LnTOBPct20Breaks=as.vector(quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE))
+CutsLnTOBPct20=LnTOBPct20Breaks[2:(length(LnTOBPct20Breaks)-1)]
 
 # Package application and results
-result=
-  smbinning.custom(df=chileancredit.train,
-                   y="FlagGB",x="TOB",cuts=Cuts.TOB.Pct20) # Run and save
+result=smbinning.custom(df=train,y="FlagGB",x="LnTOB",cuts=CutsLnTOBPct20) # Run and save
 result$ivtable # Tabulation and Information Value
 }
-

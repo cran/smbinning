@@ -18,20 +18,26 @@ It generates plots for distribution, bad rate, and weight of evidence after runn
 and saving its output.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
-result=smbinning(df=chileancredit.train,y="FlagGB",x="TOB",p=0.05) # Run and save result
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
-# Plots
+# Plot: Example 1 for a numeric variable
+result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
 par(mfrow=c(2,2))
-boxplot(chileancredit.train$TOB~chileancredit.train$FlagGB,
+boxplot(train$LnTOB~train$FlagGB,
         horizontal=TRUE, frame=FALSE, col="lightgray",main="Distribution")
 mtext("Time on Books (Months)",3)
 smbinning.plot(result,option="dist",sub="Time on Books (Months)")
 smbinning.plot(result,option="badrate",sub="Time on Books (Months)")
 smbinning.plot(result,option="WoE",sub="Time on Books (Months)")
-}
+par(mfrow=c(1,1))
 
+# Plot: Example 2 for a factor variable
+result=smbinning.factor(df=train,y="FlagGB",x="CuWealth",maxcat=11) # Run and save result
+smbinning.plot(result,option="dist",sub="Income Level")
+smbinning.plot(result,option="badrate",sub="Income Level")
+smbinning.plot(result,option="WoE",sub="Income Level")
+}

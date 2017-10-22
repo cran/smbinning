@@ -12,7 +12,7 @@ smbinning(df, y, x, p = 0.05)
 \item{y}{Binary response variable (0,1). Integer (\code{int}) is required.
 Name of \code{y} must not have a dot. Name "default" is not allowed.}
 
-\item{x}{Continuous characteristic. At least 10 different values. Value \code{Inf} is not allowed.
+\item{x}{Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed.
 Name of \code{x} must not have a dot.}
 
 \item{p}{Percentage of records per bin. Default 5\% (0.05). 
@@ -26,28 +26,27 @@ with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 \description{
 \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
 This process, also known as \emph{supervised discretization}, 
-utilizes \href{http://cran.r-project.org/package=partykit}{Recursive Partitioning} to categorize 
+utilizes \href{https://cran.r-project.org/package=partykit}{Recursive Partitioning} to categorize 
 the numeric characteristic.\cr
 The especific algorithm is Conditional Inference Trees 
 which initially excludes missing values (\code{NA}) to compute the cutpoints, adding them back later in the 
 process for the calculation of the \emph{Information Value}.
 }
 \examples{
-# Package loading and data exploration
+# Package loading
 library(smbinning) # Load package and its data
 data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-str(chileancredit) # Quick description of the data
-table(chileancredit$FlagGB) # Tabulate target variable
- 
-# Training and testing samples (Just some basic formality for Modeling) 
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
- 
+
+# Population, training and testing samples (Just some basic formality for Modeling) 
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit)
+
 # Package application
-result=smbinning(df=chileancredit.train,y="FlagGB",x="TOB",p=0.05) # Run and save result
+result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
 result$ivtable # Tabulation and Information Value
 result$iv # Information value
 result$bands # Bins or bands
-result$ctree # Decision tree from partykit
+result$ctree # Decision tree
 }
-

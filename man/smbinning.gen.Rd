@@ -9,30 +9,30 @@ smbinning.gen(df, ivout, chrname = "NewChar")
 \arguments{
 \item{df}{Dataset to be updated with the new characteristic.}
 
-\item{ivout}{An object generated after \code{smbinning}.}
+\item{ivout}{An object generated after \code{smbinning} or \code{smbinning.custom}.}
 
 \item{chrname}{Name of the new characteristic.}
 }
 \value{
-A data frame with the binned version of the characteristic analyzed with \code{smbinning}.
+A data frame with the binned version of the original characteristic.
 }
 \description{
-It generates a data frame with a new predictive characteristic after the binning process.
+It generates a data frame with a new predictive characteristic after applying
+\code{smbinning} or \code{smbinning.custom}.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
-result=smbinning(df=chileancredit.train,y="FlagGB",x="TOB",p=0.05) # Run and save result
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
-# Generate new binned characteristic into a existing data frame
-chileancredit.train=
-smbinning.gen(chileancredit.train,result,"gTOB") # Update training sample
-chileancredit=
-  smbinning.gen(chileancredit,result,"gTOB") # Update population
-sqldf("select gTOB,count(*) as Recs 
-      from chileancredit group by gTOB") # Check new field counts 
+# Binning application for a numeric variable
+result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+
+# Generate a dataset with binned characteristic
+popLnTOB=smbinning.gen(pop,result,"g1LnTOB")
+
+# Check new field counts
+table(popLnTOB$g1LnTOB)
 }
-

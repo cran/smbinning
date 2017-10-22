@@ -21,17 +21,15 @@ It gives the user the ability to plot the Information Value by characteristic.
 The chart only shows characteristics with a valid IV.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
- 
-# Training and testing samples (Just some basic formality for Modeling) 
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
- 
-# Plotting smbinning.sumiv
-sumivt=smbinning.sumiv(chileancredit.train,y="FlagGB")
-sumivt # Display table with IV by characteristic
-smbinning.sumiv.plot(sumivt,cex=0.8) # Plot IV summary table
-}
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
+# Summary Information Value (Exploratory)
+testiv=smbinning.sumiv(test,y="FlagGB") 
+
+# Plot IV
+smbinning.sumiv.plot(testiv)
+}

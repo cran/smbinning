@@ -1,24 +1,22 @@
 Package: smbinning
-Title: Optimal Binning for Scoring Modeling
-Version: 0.3
+Title: Scoring Modeling and Optimal Binning
+Version: 0.4
 Author: Herman Jopia
 Maintainer: Herman Jopia <hjopia@gmail.com>
 URL: http://www.scoringmodeling.com
-Description: The main purpose of the package is to categorize a numeric variable into bins
-    mapped to a binary target variable for its ulterior usage in scoring modeling. 
-    This functionality reduces dramatically the time consuming process of finding the optimal 
-    cut points for a given numeric variable, quickly calculates the Information Value, either for
-    one variable at the time or all at once in one line of code; and also outputs 'SQL' codes, 
-    tables, and plots used throughout the development stage.
-    The package also allows the user to understand the data via exploratory data analysis 
-    in one step, establish customized cut points for numeric characteristics, and run the analysis 
-    for categorical variables.
+Description: A set of functions to build a scoring model from beginning to end, leading the user
+	to follow an efficient and organized development process, reducing significantly the time
+	spent on data exploration, variable selection, feature engineering and binning, among other 
+	recurrent tasks. 
+	The package also incorporates scaling capabilities that transforms logistic coefficients
+	into points for a better business understanding and calculates classic performance metrics
+	of a classification model.
 Depends: R (>= 3.1.2),sqldf,partykit,Formula
 Imports: gsubfn
 License: GPL (>= 2)
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2016-06-20 07:33:54 UTC; Owner
+Packaged: 2017-10-22 16:56:19 UTC; Owner
 Repository: CRAN
-Date/Publication: 2016-06-20 10:20:35
+Date/Publication: 2017-10-22 17:07:14 UTC

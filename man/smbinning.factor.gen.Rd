@@ -9,28 +9,30 @@ smbinning.factor.gen(df, ivout, chrname = "NewChar")
 \arguments{
 \item{df}{Dataset to be updated with the new characteristic.}
 
-\item{ivout}{An object generated after \code{smbinning.factor}.}
+\item{ivout}{An object generated after \code{smbinning.factor} or \code{smbinning.factor.custom}.}
 
 \item{chrname}{Name of the new characteristic.}
 }
 \value{
-A data frame with the binned version of the characteristic analyzed with \code{smbinning.factor}.
+A data frame with the binned version of the original characteristic.
 }
 \description{
-It generates a data frame with a new predictive characteristic from a factor variable after the binning process.
+It generates a data frame with a new predictive characteristic from a factor variable after applying
+\code{smbinning.factor} or \code{smbinning.factor.custom}.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
-result=
-smbinning.factor(df=chileancredit.train,y="FlagGB",x="IncomeLevel")
-result$ivtable
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
-# Generate new binned characteristic into a existing data frame
-chileancredit=
-  smbinning.factor.gen(chileancredit,result,"gInc") # Update population
+# Binning a factor variable
+result=smbinning.factor(train,x="CuWealth",y="FlagGB",maxcat=11)
+
+# Generate a dataset with binned characteristic
+popwealth=smbinning.factor.gen(pop,result,"g1CuWealth")
+
+# Check new field counts
+table(popwealth$g1CuWealth)
 }
-

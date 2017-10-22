@@ -11,7 +11,7 @@ smbinning.eda(df, rounding = 3, pbar = 1)
 
 \item{rounding}{Optional parameter to define the decimal points shown in the output table. Default is 3.}
 
-\item{pbar}{Optional parameter that turns on or off a progress bar. Default value is 1 (On).}
+\item{pbar}{Optional parameter that turns on or off a progress bar. Default value is 1.}
 }
 \value{
 The command \code{smbinning.eda} generates two data frames that list each characteristic 
@@ -19,19 +19,34 @@ with basic statistics such as extreme values and quartiles;
 and also percentages of missing values and outliers, among others.
 }
 \description{
-It shows basic statistics for each numeric, integer, and factor characteristic in a data frame.
+It shows basic statistics for each characteristic in a data frame.
+The report includes:
+\itemize{
+  \item Field: Field name.
+  \item Type: Factor, numeric, integer, other.
+  \item Recs: Number of records.
+  \item Miss: Number of missing records.
+  \item Min: Minimum value.
+  \item Q25: First quartile. It splits off the lowest 25\% of data from the highest 75\%.
+  \item Q50: Median or second quartile. It cuts data set in half.
+  \item Avg: Average value.
+  \item Q75: Third quartile. It splits off the lowest 75\% of data from the highest 25\%.
+  \item Max: Maximum value.
+  \item StDv: Standard deviation of a sample.
+  \item Neg: Number of negative values.
+  \item Pos: Number of positive values.
+  \item OutLo: Number of outliers. Records below \code{Q25-1.5*IQR}, where \code{IQR=Q75-Q25}. 
+  \item OutHi: Number of outliers. Records above \code{Q75+1.5*IQR}, where \code{IQR=Q75-Q25}.
+  }
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
- 
-# Training and testing samples (Just some basic formality for Modeling) 
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
- 
-# EDA application
-smbinning.eda(chileancredit.train,rounding=3)$eda # Table with basic statistics.
-smbinning.eda(chileancredit.train,rounding=3)$edapct # Table with basic percentages.
-}
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
+# EDA application
+smbinning.eda(train,rounding=3)$eda # Table with basic statistics.
+smbinning.eda(train,rounding=3)$edapct # Table with basic percentages.
+}

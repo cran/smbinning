@@ -14,17 +14,26 @@ A text with the SQL code for binning.
 }
 \description{
 It outputs a SQL code to facilitate the generation of new binned characetristic 
-in a SQL environment.
+in a SQL environment. User must define table and new characteristic name.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
-result=smbinning(df=chileancredit.train,y="FlagGB",x="TOB",p=0.05) # Run and save result
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
-# Generate SQL code
+# Example 1: Binning a numeric variable
+result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+smbinning.sql(result)
+
+# Example 2: Binning for a factor variable
+result=smbinning.factor(df=train,x="CuWealth",y="FlagGB",maxcat=11)
+smbinning.sql(result)
+
+# Example 3: Customized binning for a factor variable
+result=smbinning.factor.custom(
+  df=train,x="CuWealth",y="FlagGB",
+  c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
 smbinning.sql(result)
 }
-

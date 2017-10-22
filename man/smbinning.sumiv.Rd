@@ -22,16 +22,13 @@ It gives the user the ability to calculate, in one step, the IV for each charact
 This function also shows a progress bar so the user can see the status of the process.
 }
 \examples{
-# Package loading and data exploration
-library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
- 
-# Training and testing samples (Just some basic formality for Modeling) 
-chileancredit.train=subset(chileancredit,FlagSample==1)
-chileancredit.test=subset(chileancredit,FlagSample==0)
- 
-# Summary IV application
-sumivt=smbinning.sumiv(chileancredit.train,y="FlagGB")
-sumivt # Display table with IV by characteristic
-}
+# Training and testing samples (Just some basic formality for Modeling)
+pop=chileancredit # Set population
+train=subset(pop,Rnd<=0.7) # Training sample
+test=subset(pop,Rnd>0.7) # Testing sample
+rm(chileancredit) # Remove original dataset
 
+# Summary Information Value (Exploratory)
+testiv=smbinning.sumiv(test,y="FlagGB")
+testiv
+}
