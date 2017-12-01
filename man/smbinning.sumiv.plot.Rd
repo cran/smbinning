@@ -18,18 +18,6 @@ for each numeric and factor characteristic in the dataset.
 }
 \description{
 It gives the user the ability to plot the Information Value by characteristic.
-The chart only shows characteristics with a valid IV.
-}
-\examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
-
-# Summary Information Value (Exploratory)
-testiv=smbinning.sumiv(test,y="FlagGB") 
-
-# Plot IV
-smbinning.sumiv.plot(testiv)
+The chart only shows characteristics with a valid IV. 
+Example shown on \code{smbinning.sumiv} section.
 }

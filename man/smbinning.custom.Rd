@@ -26,21 +26,14 @@ with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 It gives the user the ability to create customized cutpoints.
 }
 \examples{
-# Population, training and testing samples (Just some basic formality for Modeling) 
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit)
-
-# Remove exclusions from chileancredit dataset
-LnTOBtrain=subset(train,(FlagGB==1 | FlagGB==0), select=LnTOB)
+# Load library and its dataset
+library(smbinning) # Load package and its data
 
 # Custom cutpoints using percentiles (20\% each)
-quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE) # See quantiles 
-LnTOBPct20Breaks=as.vector(quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE))
-CutsLnTOBPct20=LnTOBPct20Breaks[2:(length(LnTOBPct20Breaks)-1)]
+cbs1cuts=as.vector(quantile(chileancredit$cbs1, probs=seq(0,1,0.2), na.rm=TRUE)) # Quantiles
+cbs1cuts=cbs1cuts[2:(length(cbs1cuts)-1)] # Remove first (min) and last (max) values
 
-# Package application and results
-result=smbinning.custom(df=train,y="FlagGB",x="LnTOB",cuts=CutsLnTOBPct20) # Run and save
+# Example: Customized binning
+result=smbinning.custom(df=chileancredit,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
 result$ivtable # Tabulation and Information Value
 }

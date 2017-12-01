@@ -25,42 +25,57 @@ It transforms the coefficients of a logistic regression into scaled points
 based on the following three parameters pre-selected by the analyst: PDO, Score, and Odds.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning)
 
-# Generate binned variables
-smbCuScore3=smbinning(train,x="CuScore3",y="FlagGB")
-smbCuTOB=smbinning(train,x="CuTOB",y="FlagGB")
-smbCuDpBal=smbinning(train,x="CuDpBal",y="FlagGB")
-smbCuDDFq12M=smbinning(train,x="CuDDFq12M",y="FlagGB")
-smbCuPOSFq12M=smbinning(train,x="CuPOSFq12M",y="FlagGB")
-smbCuWealth=smbinning.factor.custom(
-  train,x="CuWealth",y="FlagGB",
-  c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
-  
-# Update dataset
-pop=smbinning.gen(pop,smbCuScore3,"g1CuScore3")
-pop=smbinning.gen(pop,smbCuTOB,"g1CuTOB")
-pop=smbinning.gen(pop,smbCuDpBal,"g1CuDpBal")
-pop=smbinning.gen(pop,smbCuDDFq12M,"g1CuDDFq12M")
-pop=smbinning.gen(pop,smbCuPOSFq12M,"g1CuPOSFq12M")
-pop=smbinning.factor.gen(pop,smbCuWealth,"g1CuWealth")
-# Resampling
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
+# Sampling
+pop=chileancredit # Population
+train=subset(pop,rnd<=0.7) # Training sample
+
+# Generate binning object to generate variables
+smbcbs1=smbinning(train,x="cbs1",y="fgood")
+smbcbinq=smbinning.factor(train,x="cbinq",y="fgood")
+smbcblineut=smbinning.custom(train,x="cblineut",y="fgood",cuts=c(30,40,50))
+smbpmt=smbinning.factor(train,x="pmt",y="fgood")
+smbtob=smbinning.custom(train,x="tob",y="fgood",cuts=c(1,2,3))
+smbdpd=smbinning.factor(train,x="dpd",y="fgood")
+smbdep=smbinning.custom(train,x="dep",y="fgood",cuts=c(10000,12000,15000))
+smbod=smbinning.factor(train,x="od",y="fgood")
+smbhome=smbinning.factor(train,x="home",y="fgood")
+smbinc=smbinning.factor.custom(
+  train,x="inc",y="fgood",
+  c("'W01','W02'","'W03','W04','W05'","'W06','W07'","'W08','W09','W10'"))
+
+pop=smbinning.gen(pop,smbcbs1,"g1cbs1")
+pop=smbinning.factor.gen(pop,smbcbinq,"g1cbinq")
+pop=smbinning.gen(pop,smbcblineut,"g1cblineut")
+pop=smbinning.factor.gen(pop,smbpmt,"g1pmt")
+pop=smbinning.gen(pop,smbtob,"g1tob")
+pop=smbinning.factor.gen(pop,smbdpd,"g1dpd")
+pop=smbinning.gen(pop,smbdep,"g1dep")
+pop=smbinning.factor.gen(pop,smbod,"g1od")
+pop=smbinning.factor.gen(pop,smbhome,"g1home")
+pop=smbinning.factor.gen(pop,smbinc,"g1inc")
+
+# Resample
+train=subset(pop,rnd<=0.7) # Training sample
+test=subset(pop,rnd>0.7) # Testing sample
 
 # Run logistic regression
-f=FlagGB~g1CuScore3+g1CuTOB+g1CuDpBal+g1CuDDFq12M+g1CuPOSFq12M+g1CuWealth
+f=fgood~g1cbs1+g1cbinq+g1cblineut+g1pmt+g1tob+g1dpd+g1dep+g1od+g1home+g1inc
 modlogisticsmb=glm(f,data = train,family = binomial())
 summary(modlogisticsmb)
 
-# Scaling: From logistic parameters to points
+# Example: Scaling from logistic parameters to points
 smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
 smbscaled$logitscaled # Scaled model
 smbscaled$minmaxscore # Expected minimum and maximum Score
 smbscaled$parameters # Parameters used for scaling
-smbscaled$logitraw # Extract of original logistic regression
+summary(smbscaled$logitraw) # Extract of original logistic regression
+
+# Example: Generate score from scaled model
+pop1=smbinning.scoring.gen(smbscaled=smbscaled, dataset=pop)
+
+# Example Generate SQL code from scaled model
+smbinning.scoring.sql(smbscaled)
 }

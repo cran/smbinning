@@ -2,7 +2,7 @@
 % Please edit documentation in R/smbinning.R
 \name{smbinning.sumiv}
 \alias{smbinning.sumiv}
-\title{Information value Summary}
+\title{Information Value Summary}
 \usage{
 smbinning.sumiv(df, y)
 }
@@ -22,13 +22,17 @@ It gives the user the ability to calculate, in one step, the IV for each charact
 This function also shows a progress bar so the user can see the status of the process.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning)
 
-# Summary Information Value (Exploratory)
-testiv=smbinning.sumiv(test,y="FlagGB")
+# Test sample
+test=subset(chileancredit,rnd>0.9) # Training sample
+test$rnd=NULL
+
+# Example: Information Value Summary
+testiv=smbinning.sumiv(test,y="fgood")
 testiv
+
+# Example: Plot of Information Value Summary
+smbinning.sumiv.plot(testiv)
 }

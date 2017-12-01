@@ -18,7 +18,7 @@ smbinning.metrics(dataset, prediction, actualclass, cutoff = NA, report = 1,
 If not specified, it will be estimated by using the maximum value of Youden J (Sensitivity+Specificity-1).
 If not found in the data frame, it will take the closest lower value.}
 
-\item{report}{Indicator defined by user. 1: Show report (Default), 2: Do not show report.}
+\item{report}{Indicator defined by user. 1: Show report (Default), 0: Do not show report.}
 
 \item{plot}{Specifies the plot to be shown for overall evaluation. It has three options: 'auc' shows the ROC curve, 
 'ks' shows the cumulative distribution of the actual class and its maximum difference (KS Statistic), and 'none' (Default).}
@@ -29,27 +29,25 @@ If not found in the data frame, it will take the closest lower value.}
 The command \code{smbinning.metrics} returns a report with classic performance metrics of a classification model.
 }
 \description{
-Performance Metrics for a Classification Model
+It computes the classic performance metrics of a scoring model, including AUC, KS and all the relevant ones
+from the classification matrix at a specific threshold or cutoff.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning) # Load package and its data
 
-# Metrics application for Credit Score 1
-smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+# Example: Metrics Credit Score 1
+smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
                   report=1) # Show report
-smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB", 
-                  cutoff=660, report=1) # User cutoff
-smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+                  cutoff=600, report=1) # User cutoff
+smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
                   report=0, plot="auc") # Plot AUC
-smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
                   report=0, plot="ks") # Plot KS
-                  
+
 # Save table with all details of metrics
-CuSc1Metrics=smbinning.metrics(
-  dataset=test,prediction="CuScore1",actualclass="FlagGB", 
+cbs1metrics=smbinning.metrics(
+  dataset=chileancredit,prediction="cbs1",actualclass="fgood",
   report=0, returndf=1) # Save metrics details
 }

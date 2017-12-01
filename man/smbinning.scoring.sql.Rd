@@ -14,43 +14,5 @@ The command \code{smbinning.scoring.sql} generates a SQL code to implement the m
 }
 \description{
 After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code 
-that creates and updates all variables present in the scaled model.
-}
-\examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
-
-# Generate binned variables
-smbCuScore3=smbinning(train,x="CuScore3",y="FlagGB")
-smbCuTOB=smbinning(train,x="CuTOB",y="FlagGB")
-smbCuDpBal=smbinning(train,x="CuDpBal",y="FlagGB")
-smbCuDDFq12M=smbinning(train,x="CuDDFq12M",y="FlagGB")
-smbCuPOSFq12M=smbinning(train,x="CuPOSFq12M",y="FlagGB")
-smbCuWealth=smbinning.factor.custom(
-  train,x="CuWealth",y="FlagGB",
-  c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
-  
-# Update dataset
-pop=smbinning.gen(pop,smbCuScore3,"g1CuScore3")
-pop=smbinning.gen(pop,smbCuTOB,"g1CuTOB")
-pop=smbinning.gen(pop,smbCuDpBal,"g1CuDpBal")
-pop=smbinning.gen(pop,smbCuDDFq12M,"g1CuDDFq12M")
-pop=smbinning.gen(pop,smbCuPOSFq12M,"g1CuPOSFq12M")
-pop=smbinning.factor.gen(pop,smbCuWealth,"g1CuWealth")
-
-# Resampling
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-
-# Run logistic regression
-f=FlagGB~g1CuScore3+g1CuTOB+g1CuDpBal+g1CuDDFq12M+g1CuPOSFq12M+g1CuWealth
-modlogisticsmb=glm(f,data = train,family = binomial())
-# Scaling: From logistic parameters to points
-smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
-
-# Generate SQL code for implementation in SQL
-smbinning.scoring.sql(smbscaled)
+that creates and updates all variables present in the scaled model. Example shown on \code{smbinning.scaling} section.
 }

@@ -12,7 +12,7 @@ smbinning.factor(df, y, x, maxcat = 10)
 \item{y}{Binary response variable (0,1). Integer (\code{int}) is required.
 Name of \code{y} must not have a dot.}
 
-\item{x}{A factor variable with at least 2 different values. Value \code{Inf} is not allowed.}
+\item{x}{A factor variable with at least 2 different values. Labesl with commas are not allowed.}
 
 \item{maxcat}{Specifies the maximum number of categories.  Default value is 10.
 Name of \code{x} must not have a dot.}
@@ -26,14 +26,10 @@ with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor
 It generates a table with relevant metrics for all the categories of a given factor variable.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning) # Load package and its data
 
 # Binning a factor variable
-result=smbinning.factor(train,x="CuWealth",y="FlagGB",maxcat=11)
+result=smbinning.factor(chileancredit,x="inc",y="fgood", maxcat=11)
 result$ivtable
-result$iv
 }

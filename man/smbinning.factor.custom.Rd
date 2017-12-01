@@ -29,17 +29,17 @@ Once these new attribues are created in a list (called \code{groups}), the funti
 the uniques values of a given factor variable.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning) # Load package and its data
 
-# Customized binning for a factor variable
+# Example: Customized binning for a factor variable
+# Notation: Groups between double quotes
 result=smbinning.factor.custom(
-    train,x="CuWealth",
-    y="FlagGB",
-    c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
+  chileancredit,x="inc",
+  y="fgood",
+  c("'W01','W02'",        # Group 1
+    "'W03','W04','W05'",  # Group 2
+    "'W06','W07'",        # Group 3
+    "'W08','W09','W10'")) # Group 4
 result$ivtable
-result$iv
 }

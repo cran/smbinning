@@ -33,18 +33,11 @@ which initially excludes missing values (\code{NA}) to compute the cutpoints, ad
 process for the calculation of the \emph{Information Value}.
 }
 \examples{
-# Package loading
+# Load library and its dataset
 library(smbinning) # Load package and its data
-data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
 
-# Population, training and testing samples (Just some basic formality for Modeling) 
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit)
-
-# Package application
-result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+# Example: Optimal binning
+result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
 result$ivtable # Tabulation and Information Value
 result$iv # Information value
 result$bands # Bins or bands

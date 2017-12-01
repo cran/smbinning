@@ -40,13 +40,10 @@ The report includes:
   }
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
-pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+# Load library and its dataset
+library(smbinning) # Load package and its data
 
-# EDA application
-smbinning.eda(train,rounding=3)$eda # Table with basic statistics.
-smbinning.eda(train,rounding=3)$edapct # Table with basic percentages.
+# Example: Exploratory data analysis of dataset
+smbinning.eda(chileancredit,rounding=3)$eda # Table with basic statistics
+smbinning.eda(chileancredit,rounding=3)$edapct # Table with basic percentages
 }

@@ -21,18 +21,21 @@ It generates a data frame with a new predictive characteristic from a factor var
 \code{smbinning.factor} or \code{smbinning.factor.custom}.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
+# Load library and its dataset
+library(smbinning) # Load package and its data
 pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+train=subset(pop,rnd<=0.7) # Training sample
 
-# Binning a factor variable
-result=smbinning.factor(train,x="CuWealth",y="FlagGB",maxcat=11)
+# Binning a factor variable on training data
+result=smbinning.factor(train,x="home",y="fgood")
 
-# Generate a dataset with binned characteristic
-popwealth=smbinning.factor.gen(pop,result,"g1CuWealth")
+# Example: Append new binned characteristic to population
+pop=smbinning.factor.gen(pop,result,"g1home")
+
+# Split training
+train=subset(pop,rnd<=0.7) # Training sample
 
 # Check new field counts
-table(popwealth$g1CuWealth)
+table(train$g1home)
+table(pop$g1home)
 }

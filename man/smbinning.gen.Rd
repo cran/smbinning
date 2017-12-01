@@ -21,18 +21,17 @@ It generates a data frame with a new predictive characteristic after applying
 \code{smbinning} or \code{smbinning.custom}.
 }
 \examples{
-# Training and testing samples (Just some basic formality for Modeling)
+# Load library and its dataset
+library(smbinning) # Load package and its data
 pop=chileancredit # Set population
-train=subset(pop,Rnd<=0.7) # Training sample
-test=subset(pop,Rnd>0.7) # Testing sample
-rm(chileancredit) # Remove original dataset
+train=subset(pop,rnd<=0.7) # Training sample
 
 # Binning application for a numeric variable
-result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+result=smbinning(df=train,y="fgood",x="dep") # Run and save result
 
 # Generate a dataset with binned characteristic
-popLnTOB=smbinning.gen(pop,result,"g1LnTOB")
+pop=smbinning.gen(pop,result,"g1dep")
 
 # Check new field counts
-table(popLnTOB$g1LnTOB)
+table(pop$g1dep)
 }

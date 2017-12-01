@@ -18,18 +18,11 @@
 #' The user should save the output result so it can be used 
 #' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 #' @examples
-#' # Package loading
+#' # Load library and its dataset
 #' library(smbinning) # Load package and its data
-#' data(chileancredit) # Load smbinning sample dataset (Chilean Credit)
 #' 
-#' # Population, training and testing samples (Just some basic formality for Modeling) 
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit)
-#' 
-#' # Package application
-#' result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+#' # Example: Optimal binning
+#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
 #' result$ivtable # Tabulation and Information Value
 #' result$iv # Information value
 #' result$bands # Bins or bands
@@ -246,23 +239,15 @@ smbinning = function(df,y,x,p=0.05){
 #' The user should save the output result so it can be used 
 #' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 #' @examples
-
-#' # Population, training and testing samples (Just some basic formality for Modeling) 
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit)
-#' 
-#' # Remove exclusions from chileancredit dataset
-#' LnTOBtrain=subset(train,(FlagGB==1 | FlagGB==0), select=LnTOB)
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' 
 #' # Custom cutpoints using percentiles (20% each)
-#' quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE) # See quantiles 
-#' LnTOBPct20Breaks=as.vector(quantile(LnTOBtrain, probs=seq(0,1,0.2), na.rm=TRUE))
-#' CutsLnTOBPct20=LnTOBPct20Breaks[2:(length(LnTOBPct20Breaks)-1)]
+#' cbs1cuts=as.vector(quantile(chileancredit$cbs1, probs=seq(0,1,0.2), na.rm=TRUE)) # Quantiles
+#' cbs1cuts=cbs1cuts[2:(length(cbs1cuts)-1)] # Remove first (min) and last (max) values
 #' 
-#' # Package application and results
-#' result=smbinning.custom(df=train,y="FlagGB",x="LnTOB",cuts=CutsLnTOBPct20) # Run and save
+#' # Example: Customized binning
+#' result=smbinning.custom(df=chileancredit,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
 #' result$ivtable # Tabulation and Information Value
 
 smbinning.custom = function(df,y,x,cuts){
@@ -481,16 +466,12 @@ smbinning.custom = function(df,y,x,cuts){
 #' with basic statistics such as extreme values and quartiles;
 #' and also percentages of missing values and outliers, among others. 
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' 
-#' # EDA application
-#' smbinning.eda(train,rounding=3)$eda # Table with basic statistics.
-#' smbinning.eda(train,rounding=3)$edapct # Table with basic percentages.
+#' # Example: Exploratory data analysis of dataset
+#' smbinning.eda(chileancredit,rounding=3)$eda # Table with basic statistics
+#' smbinning.eda(chileancredit,rounding=3)$edapct # Table with basic percentages
 
 smbinning.eda = function(df, rounding=3, pbar=1){
   # Check data frame and formats
@@ -599,24 +580,19 @@ smbinning.eda = function(df, rounding=3, pbar=1){
 #' @param df A data frame.
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
 #' Name of \code{y} must not have a dot.
-#' @param x A factor variable with at least 2 different values. Value \code{Inf} is not allowed. 
+#' @param x A factor variable with at least 2 different values. Labesl with commas are not allowed. 
 #' @param maxcat Specifies the maximum number of categories.  Default value is 10.
 #' Name of \code{x} must not have a dot.
 #' @return The command \code{smbinning.factor} generates and object containing the necessary info and utilities for binning.
 #' The user should save the output result so it can be used 
 #' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 #' @examples
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
-#' 
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
+#'
 #' # Binning a factor variable
-#' result=smbinning.factor(train,x="CuWealth",y="FlagGB",maxcat=11)
+#' result=smbinning.factor(chileancredit,x="inc",y="fgood", maxcat=11)
 #' result$ivtable
-#' result$iv
 
 smbinning.factor = function(df,y,x,maxcat=10){
   # Check data frame and formats
@@ -633,6 +609,8 @@ smbinning.factor = function(df,y,x,maxcat=10){
     return("Target (y) not found or it is not numeric")
   } else if (max(df[,i],na.rm=T)!=1){
     return("Maximum not 1")
+  } else if (any(grepl(",", df[,j]))){
+    return("Values contain comma")
   } else if (tolower(y)=="default"){
     return("Field name 'default' not allowed")
   } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'")>0){
@@ -784,7 +762,7 @@ smbinning.factor = function(df,y,x,maxcat=10){
 # End Binning Factors 20150407 #################################################
 
 
-# Begin Custom Binning Factors 20170910 ########################################
+# Begin Custom Binning Factors 20171117 ########################################
 #' Customized Binning on Factor Variables
 #'
 #' It gives the user the ability to combine categories and create new attributes for a given characteristic.
@@ -801,20 +779,19 @@ smbinning.factor = function(df,y,x,maxcat=10){
 #' The user should save the output result so it can be used 
 #' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' 
-#' # Customized binning for a factor variable
+#' # Example: Customized binning for a factor variable
+#' # Notation: Groups between double quotes
 #' result=smbinning.factor.custom(
-#'     train,x="CuWealth",
-#'     y="FlagGB",
-#'     c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
+#'   chileancredit,x="inc",
+#'   y="fgood",
+#'   c("'W01','W02'",        # Group 1
+#'     "'W03','W04','W05'",  # Group 2
+#'     "'W06','W07'",        # Group 3
+#'     "'W08','W09','W10'")) # Group 4
 #' result$ivtable
-#' result$iv
 
 smbinning.factor.custom = function(df,y,x,groups){
   # Check data frame and formats
@@ -831,6 +808,8 @@ smbinning.factor.custom = function(df,y,x,groups){
     return("Target (y) not found or it is not numeric")
   } else if (max(df[,i],na.rm=T)!=1){
     return("Maximum not 1")
+  } else if (any(grepl(",", df[,j]))){
+    return("Values contain comma")
   } else if (tolower(y)=="default"){
     return("Field name 'default' not allowed")
   } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'")>0){
@@ -962,7 +941,7 @@ smbinning.factor.custom = function(df,y,x,groups){
   }
   list(ivtable=ivt,iv=iv,x=x,col_id=j,groups=groups)
   }
-# End Custom Binning Factors 20170910 ##########################################
+# End Custom Binning Factors 20171117 ##########################################
 
 
 # Begin Gen Characteristic for factor variables ################################
@@ -975,21 +954,23 @@ smbinning.factor.custom = function(df,y,x,groups){
 #' @param chrname Name of the new characteristic.
 #' @return A data frame with the binned version of the original characteristic.
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' train=subset(pop,rnd<=0.7) # Training sample
 #' 
-#' # Binning a factor variable
-#' result=smbinning.factor(train,x="CuWealth",y="FlagGB",maxcat=11)
+#' # Binning a factor variable on training data
+#' result=smbinning.factor(train,x="home",y="fgood")
 #' 
-#' # Generate a dataset with binned characteristic
-#' popwealth=smbinning.factor.gen(pop,result,"g1CuWealth")
+#' # Example: Append new binned characteristic to population
+#' pop=smbinning.factor.gen(pop,result,"g1home")
+#' 
+#' # Split training
+#' train=subset(pop,rnd<=0.7) # Training sample
 #' 
 #' # Check new field counts
-#' table(popwealth$g1CuWealth)
+#' table(train$g1home)
+#' table(pop$g1home)
 
 # Updated 20170910
 smbinning.factor.gen=function(df,ivout,chrname="NewChar"){
@@ -1061,21 +1042,19 @@ smbinning.factor.gen=function(df,ivout,chrname="NewChar"){
 #' @param chrname Name of the new characteristic.
 #' @return A data frame with the binned version of the original characteristic.
 #' @examples
-
-#' # Training and testing samples (Just some basic formality for Modeling)
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' train=subset(pop,rnd<=0.7) # Training sample
 #' 
 #' # Binning application for a numeric variable
-#' result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+#' result=smbinning(df=train,y="fgood",x="dep") # Run and save result
 #' 
 #' # Generate a dataset with binned characteristic
-#' popLnTOB=smbinning.gen(pop,result,"g1LnTOB")
+#' pop=smbinning.gen(pop,result,"g1dep")
 #' 
 #' # Check new field counts
-#' table(popLnTOB$g1LnTOB)
+#' table(pop$g1dep)
 
 smbinning.gen=function(df,ivout,chrname="NewChar"){
   df=cbind(df,tmpname=NA)
@@ -1118,56 +1097,60 @@ smbinning.gen=function(df,ivout,chrname="NewChar"){
 # Begin Metrics 20171009 ######################################################
 #' Performance Metrics for a Classification Model
 #'
+#' It computes the classic performance metrics of a scoring model, including AUC, KS and all the relevant ones
+#' from the classification matrix at a specific threshold or cutoff.
 #' @param dataset Data frame.
 #' @param prediction Classifier. A value generated by a classification model (Must be numeric).
 #' @param actualclass Binary variable (0/1) that represents the actual class (Must be numeric).
 #' @param cutoff Point at wich the classifier splits (predicts) the actual class (Must be numeric). 
 #' If not specified, it will be estimated by using the maximum value of Youden J (Sensitivity+Specificity-1).
 #' If not found in the data frame, it will take the closest lower value.
-#' @param report Indicator defined by user. 1: Show report (Default), 2: Do not show report.
+#' @param report Indicator defined by user. 1: Show report (Default), 0: Do not show report.
 #' @param plot Specifies the plot to be shown for overall evaluation. It has three options: 'auc' shows the ROC curve, 
 #' 'ks' shows the cumulative distribution of the actual class and its maximum difference (KS Statistic), and 'none' (Default).
 #' @param returndf Option for the user to save the data frame behind the metrics. 1: Show data frame, 0: Do not show (Default).
 #' @return The command \code{smbinning.metrics} returns a report with classic performance metrics of a classification model.
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
 #' 
-#' # Metrics application for Credit Score 1
-#' smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+#' # Example: Metrics Credit Score 1
+#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
 #'                   report=1) # Show report
-#' smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB", 
-#'                   cutoff=660, report=1) # User cutoff
-#' smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#'                   cutoff=600, report=1) # User cutoff
+#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
 #'                   report=0, plot="auc") # Plot AUC
-#' smbinning.metrics(dataset=test,prediction="CuScore1",actualclass="FlagGB",
+#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
 #'                   report=0, plot="ks") # Plot KS
-#'                   
+#'
 #' # Save table with all details of metrics
-#' CuSc1Metrics=smbinning.metrics(
-#'   dataset=test,prediction="CuScore1",actualclass="FlagGB", 
+#' cbs1metrics=smbinning.metrics(
+#'   dataset=chileancredit,prediction="cbs1",actualclass="fgood",
 #'   report=0, returndf=1) # Save metrics details
 
 smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plot="none", returndf=0){
   i=which(names(dataset)==actualclass) # Find Column for actualclass
+  j=which(names(dataset)==prediction) # Find Column for prediction
   if(!is.data.frame(dataset)){ # Check if data.frame
     return("Data not a data.frame.")
-  } else if (!is.na(cutoff) & !is.numeric(cutoff)){ # Check if target variable is numeric
+  } else if (!is.na(cutoff) & !is.numeric(cutoff)){
     return("'cutoff' must be numeric.")
-  } else if(max(dataset[,i],na.rm=T)!=1 | min(dataset[,i],na.rm=T)!=0){
+  } else if(!is.numeric(dataset[,which(names(dataset)==prediction)])){
+    return("'prediction' not found.")
+  } else if(max(dataset[,i],na.rm=TRUE)!=1 | min(dataset[,i],na.rm=TRUE)!=0){
     return("'actualclass' must be binary (0/1).")
-  } else if(length(unique(na.omit(dataset[,c("FlagGB")])))!=2){
+  } else if(length(unique(na.omit(dataset[,c(actualclass)])))!=2){
     return("'actualclass' must be binary (0/1).")
   } else if(report!=1 & report!=0){ 
     return("'report' must be 0 (Deactivated) or 1 (Activated).")
   } else if(returndf!=1 & returndf!=0){ 
     return("'df' must be 0 (Deactivated) or 1 (Activated).")
   } else if(plot!="auc" & plot!="ks" & plot!="none"){ 
-    return("'plot' options are: 'auc', 'ks' or 'none'.")}
+    return("'plot' options are: 'auc', 'ks' or 'none'.")
+  } else if(!is.na(cutoff) & (max(dataset[,j],na.rm=TRUE)<cutoff | min(dataset[,j],na.rm=TRUE)>cutoff)){
+   return("'cutoff' out of range.")
+    }
   else {
     
     # Create table and its basic structure
@@ -1349,14 +1332,17 @@ smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plo
       admetrics=paste0(admetrics, "      %Records>=Cutoff : ",sprintf("%.4f",round(recsabovecutoff,4)),"\n")
       admetrics=paste0(admetrics, "             Good Rate : ",sprintf("%.4f",round(goodrate,4))," (Vs ",sprintf("%.4f",round(SumGoods/SumRecords,4))," Overall)\n")
       admetrics=paste0(admetrics, "              Bad Rate : ",sprintf("%.4f",round(badrate,4))," (Vs ",sprintf("%.4f",round(SumBads/SumRecords,4))," Overall)\n")
-      admetrics=paste0(admetrics, "              Accuracy : ",sprintf("%.4f",round((tp+tn)/(tp+fp+tn+fn),4)),"\n")
-      admetrics=paste0(admetrics, "           Sensitivity : ",sprintf("%.4f",round(tp/p,4)),"\n")
-      admetrics=paste0(admetrics, "           Specificity : ",sprintf("%.4f",round(tn/n,4)),"\n")
-      admetrics=paste0(admetrics, "   False Positive Rate : ",sprintf("%.4f",round(fp/n,4)),"\n")
-      admetrics=paste0(admetrics, "             Precision : ",sprintf("%.4f",round(tp/(tp+fp),4)),"\n")
-      admetrics=paste0(admetrics, "     Inverse Precision : ",sprintf("%.4f",round(tn/(fn+tn),4)),"\n")
+      admetrics=paste0(admetrics, "        Accuracy (ACC) : ",sprintf("%.4f",round((tp+tn)/(tp+fp+tn+fn),4)),"\n")
+      admetrics=paste0(admetrics, "     Sensitivity (TPR) : ",sprintf("%.4f",round(tp/p,4)),"\n")
+      admetrics=paste0(admetrics, " False Neg. Rate (FNR) : ",sprintf("%.4f",round(fn/p,4)),"\n")
+      admetrics=paste0(admetrics, " False Pos. Rate (FPR) : ",sprintf("%.4f",round(fp/n,4)),"\n")
+      admetrics=paste0(admetrics, "     Specificity (TNR) : ",sprintf("%.4f",round(tn/n,4)),"\n")
+      admetrics=paste0(admetrics, "       Precision (PPV) : ",sprintf("%.4f",round(tp/(tp+fp),4)),"\n")
+      admetrics=paste0(admetrics, "  False Discovery Rate : ",sprintf("%.4f",round(fp/(tp+fp),4)),"\n")
+      admetrics=paste0(admetrics, "    False Omision Rate : ",sprintf("%.4f",round(fn/(fn+tn),4)),"\n")
+      admetrics=paste0(admetrics, "  Inv. Precision (NPV) : ",sprintf("%.4f",round(tn/(fn+tn),4)),"\n")
       admetrics=paste0(admetrics,"\n")
-      admetrics=paste0(admetrics, "  Note: ",nmiss," rows deleted because missing data.\n")
+      admetrics=paste0(admetrics, "  Note: ",nmiss," rows deleted due to missing data.\n")
       admetrics=paste0(admetrics,"\n")
       admetrics=gsub(", ","",admetrics)
       
@@ -1405,6 +1391,191 @@ smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plo
 # Ends Metrics 20171009 #######################################################
 
 
+# Ini: Metrics Plot 20171022 #############################################
+#' Visualization of a Classification Matrix
+#'
+#' It generates four plots after running and saving the output report from \code{smbinning.metrics}.
+#' @param df Data frame generated with \code{smbinning.metrics}.
+#' @param cutoff Value of the classifier that splits the data between positive (>=) and negative (<).
+#' @param plot Plot to be drawn. Options are: 'cmactual' (default),'cmactualrates','cmmodel','cmmodelrates'.
+#' @examples 
+#' # Load library and its dataset
+#' library(smbinning)
+#' smbmetricsdf=smbinning.metrics(dataset=chileancredit, prediction="cbs1",
+#'                                actualclass="fgood", returndf=1)
+#' 
+#' # Example 1: Plots based on optimal cutoff
+#' smbinning.metrics.plot(df=smbmetricsdf,plot='cmactual')
+#' 
+#' # Example 2: Plots using user defined cutoff
+#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactual')
+#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactualrates')
+#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodel')
+#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodelrates')
+
+smbinning.metrics.plot=function(df,cutoff=NA, plot="cmactual"){
+  
+  if(names(df)[1]!="Prediction" | names(df)[2]!="CntGood"){
+    return("Data not from smbinning.metrics.")
+  } else if (!is.na(cutoff) & !is.numeric(cutoff)){ # Check if target variable is numeric
+    return("'cutoff' must be numeric.")
+  } else if(!is.na(cutoff) & (max(df$Prediction)<cutoff | min(df$Prediction)>cutoff)){ # Check if target variable is numeric
+    return("'cutoff' out of range.")
+  } else if(plot!="cmactual" & plot!="cmactualrates" & plot!="cmmodel" & plot!="cmmodelrates"){ 
+    return("'plot' options are: 'auc', 'ks' or 'none'.")
+    }
+    else {
+  
+  df$YoudenJ=df$Sensitivity+df$Specificity-1
+  optcut=df[df$YoudenJ==max(df$YoudenJ), ]$Prediction
+  df$YoudenJ=NULL
+  
+  # If cutoff is specified
+  if(!is.na(cutoff)){
+    if ((cutoff %in% df$Prediction)==FALSE){
+      optcut=df[which.min(abs(as.numeric(df$Prediction)-cutoff)),1]
+    } else {
+      optcut=cutoff
+    }
+  }
+  
+  
+  # Confusion Matrix Components
+  tp=df[df$Prediction==optcut, ]$CumDescGood
+  fp=df[df$Prediction==optcut, ]$CumDescBad
+  fn=df[df$Prediction==optcut, ]$FN
+  tn=df[df$Prediction==optcut, ]$TN
+  
+  p=sum(df$CntGood)
+  n=sum(df$CntBad)
+  
+  # CM Metrics
+  accuracy=(tp+tn)/(tp+fp+tn+fn)
+  sensitivity=tp/p
+  FNR=fn/p
+  specificity=tn/n
+  FPR=fp/n
+  precision=tp/(tp+fp)
+  invprecision=tn/(fn+tn)
+  FDR=fp/(tp+fp)
+  FOR=fn/(fn+tn)
+  # For AUC Calculation (Trapezoid Method)
+  df$TPR=df$Sensitivity
+  df$FPR=1-df$Specificity
+  df$MgAUC=0
+  a=which(names(df)=="MgAUC")
+  f=which(names(df)=="FPR")
+  t=which(names(df)=="TPR")
+  for (i in 1:nrow(df)-1) {
+    df[i,a]=0.5*(df[i,t]+df[i+1,t])*(df[i,f]-df[i+1,f])
+  }
+  # AUC
+  auc=sum(df$MgAUC)
+  df$TPR=NULL
+  df$FPR=NULL
+  df$MgAUC=NULL
+  
+  # KS
+  df$MgKS=abs(df$PctCumAscGood-df$PctCumAscBad)
+  ks=as.numeric(max(df$MgKS))
+  df$MgKS=NULL
+  
+  # Classification Matrix
+  cmnbr=matrix(c(tp,fn,fp,tn),nrow=2,ncol=2)
+  cmpctactual=matrix(c(sensitivity,FNR,FPR,specificity),nrow=2,ncol=2)
+  cmpctmodel=matrix(c(precision,FDR,FOR,invprecision),nrow=2,ncol=2)
+
+  # CM, where X-axis is actual class 
+  if(plot=="cmactual"){
+    cmnbrplot=cmnbr
+    colnames(cmnbrplot)=c("Actual+\n[ TP | FN ]","Actual-\n[ FP | TN ]") # Actuals
+    rownames(cmnbrplot)=c("Model+","Model-") # Model
+    bpactual=
+      barplot(cmnbrplot,
+              ylim=c(0,round(1.25*max(cmnbrplot),0)),
+              col=c("grey50","grey85"),
+              beside = T,
+              axes = T,
+              border=NA,
+              legend.text = T,
+              args.legend = list(x = "top",border=NA,bty="n",horiz=F))
+    mtext(side=3,"Classification Matrix",line=2,cex=1.2, font=2)
+    mtext(side=3,paste0("Records by Actual Class. Cutoff >=",optcut),line=0.75,cex=1)
+    mtext(side=1,"Actual Class",line=3,cex=1, font=2)
+    abline(h=0) # Horizontal line
+    text(x=bpactual, y=cmnbrplot, label=cmnbrplot, pos=3, cex=1)
+  }
+  
+  
+  # CM Percentages, where X-axis is actual class 
+  if(plot=="cmactualrates"){
+    cmpctactualplot=cmpctactual
+    colnames(cmpctactualplot)=c("Actual+\n[ Sensitivity | FNR ]","Actual-\n[ FPR | Specificity ]") # Actuals
+    rownames(cmpctactualplot)=c("Model+","Model-") # Model
+    bpactualpct=
+      barplot(cmpctactualplot,
+              ylim=c(0,1),
+              col=c("grey50","grey85"),
+              beside = T,
+              axes = T, 
+              border=NA,
+              legend.text = T,
+              args.legend = list(x = "top",border=NA,bty="n",horiz=F))
+    mtext(side=3,"Classification Matrix",line=2,cex=1.2, font=2)
+    mtext(side=3,paste0("Percentage by Actual Class. Cutoff >=",optcut),line=0.75,cex=1)
+    mtext(side=1,"Actual Class",line=3,cex=1, font=2)
+    abline(h=0) # Horizontal line
+    text(x=bpactualpct, y=cmpctactualplot, label=round(cmpctactualplot,4), pos=3, cex=1)
+  }
+  
+  # CM Numbers, where X-axis is model prediction 
+  if(plot=="cmmodel"){
+    cmnbrplot=cmnbr
+    colnames(cmnbrplot)=c("Actual+","Actual-") # Actuals
+    rownames(cmnbrplot)=c("Model+\n[ TP | FP ]","Model-\n [ FN | TN ]") # Model
+    bpmodel=
+      barplot(t(cmnbrplot),
+              ylim=c(0,round(1.25*max(cmnbrplot),0)),
+              col=c("grey50","grey85"),
+              beside = T,
+              axes = T, 
+              border=NA,
+              legend.text = T,
+              args.legend = list(x = "top",border=NA,bty="n",horiz=F))
+    mtext(side=3,"Classification Matrix",line=2,cex=1.2, font=2)
+    mtext(side=3,paste0("Records by Model Prediction. Cutoff >=",optcut),line=0.75,cex=1)
+    mtext(side=1,"Model Prediction",line=3,cex=1, font=2)
+    abline(h=0) # Horizontal line
+    text(x=bpmodel, y=t(cmnbrplot), label=t(cmnbrplot), pos=3, cex=1)
+  }
+  
+  # CM Numbers, where X-axis is model prediction 
+  if(plot=="cmmodelrates"){
+    cmpctmodelplot=cmpctmodel
+    colnames(cmpctmodelplot)=c("Model+\n[ PPV | FDR ]","Model-\n[ FOR | NPV ]") # Actuals
+    rownames(cmpctmodelplot)=c("Actual+","Actual-") # Model
+    bpactualpct=
+      barplot(cmpctmodelplot,
+              ylim=c(0,1),
+              col=c("grey50","grey85"),
+              beside = T,
+              axes = T, 
+              border=NA,
+              legend.text = T,
+              args.legend = list(x = "top",border=NA,bty="n",horiz=F))
+    mtext(side=3,"Classification Matrix",line=2,cex=1.2, font=2)
+    mtext(side=3,paste0("Percentage by Model Prediction. Cutoff >=",optcut),line=0.75,cex=1)
+    mtext(side=1,"Model Prediction",line=3,cex=1, font=2)
+    abline(h=0) # Horizontal line
+    text(x=bpactualpct, y=cmpctmodelplot, label=round(cmpctmodelplot,4), pos=3, cex=1)
+  }
+  
+    } # end else
+}
+
+# End: Metrics Plot 20171022 #############################################
+
+
 # Begin Plotting ##############################################################
 #' Plots after binning
 #'
@@ -1414,26 +1585,22 @@ smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plo
 #' @param option Distribution ("dist"), Good Rate ("goodrate"), Bad Rate ("badrate"), and Weight of Evidence ("WoE").
 #' @param sub Subtitle for the chart (optional).
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning)
 #' 
-#' # Plot: Example 1 for a numeric variable
-#' result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+#' # Example 1: Numeric variable (1 page, 4 plots)
+#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
 #' par(mfrow=c(2,2))
-#' boxplot(train$LnTOB~train$FlagGB,
+#' boxplot(chileancredit$cbs1~chileancredit$fgood,
 #'         horizontal=TRUE, frame=FALSE, col="lightgray",main="Distribution")
-#' mtext("Time on Books (Months)",3)
-#' smbinning.plot(result,option="dist",sub="Time on Books (Months)")
-#' smbinning.plot(result,option="badrate",sub="Time on Books (Months)")
-#' smbinning.plot(result,option="WoE",sub="Time on Books (Months)")
+#' mtext("Credit Score",3)
+#' smbinning.plot(result,option="dist",sub="Credit Score")
+#' smbinning.plot(result,option="badrate",sub="Credit Score")
+#' smbinning.plot(result,option="WoE",sub="Credit Score")
 #' par(mfrow=c(1,1))
 #' 
-#' # Plot: Example 2 for a factor variable
-#' result=smbinning.factor(df=train,y="FlagGB",x="CuWealth",maxcat=11) # Run and save result
+#' # Example 2: Factor variable (1 plot per page)
+#' result=smbinning.factor(df=chileancredit,y="fgood",x="inc",maxcat=11)
 #' smbinning.plot(result,option="dist",sub="Income Level")
 #' smbinning.plot(result,option="badrate",sub="Income Level")
 #' smbinning.plot(result,option="WoE",sub="Income Level")
@@ -1513,45 +1680,60 @@ smbinning.plot=function(ivout,option="dist",sub=""){
 #' @return A scaled model from a logistic regression built with binned variables, the parameters
 #' used in the scaling process, the expected minimum and maximum score, and the original logistic model.
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning)
 #' 
-#' # Generate binned variables
-#' smbCuScore3=smbinning(train,x="CuScore3",y="FlagGB")
-#' smbCuTOB=smbinning(train,x="CuTOB",y="FlagGB")
-#' smbCuDpBal=smbinning(train,x="CuDpBal",y="FlagGB")
-#' smbCuDDFq12M=smbinning(train,x="CuDDFq12M",y="FlagGB")
-#' smbCuPOSFq12M=smbinning(train,x="CuPOSFq12M",y="FlagGB")
-#' smbCuWealth=smbinning.factor.custom(
-#'   train,x="CuWealth",y="FlagGB",
-#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
-#'   
-#' # Update dataset
-#' pop=smbinning.gen(pop,smbCuScore3,"g1CuScore3")
-#' pop=smbinning.gen(pop,smbCuTOB,"g1CuTOB")
-#' pop=smbinning.gen(pop,smbCuDpBal,"g1CuDpBal")
-#' pop=smbinning.gen(pop,smbCuDDFq12M,"g1CuDDFq12M")
-#' pop=smbinning.gen(pop,smbCuPOSFq12M,"g1CuPOSFq12M")
-#' pop=smbinning.factor.gen(pop,smbCuWealth,"g1CuWealth")
-#' # Resampling
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
+#' # Sampling
+#' pop=chileancredit # Population
+#' train=subset(pop,rnd<=0.7) # Training sample
+#' 
+#' # Generate binning object to generate variables
+#' smbcbs1=smbinning(train,x="cbs1",y="fgood")
+#' smbcbinq=smbinning.factor(train,x="cbinq",y="fgood")
+#' smbcblineut=smbinning.custom(train,x="cblineut",y="fgood",cuts=c(30,40,50))
+#' smbpmt=smbinning.factor(train,x="pmt",y="fgood")
+#' smbtob=smbinning.custom(train,x="tob",y="fgood",cuts=c(1,2,3))
+#' smbdpd=smbinning.factor(train,x="dpd",y="fgood")
+#' smbdep=smbinning.custom(train,x="dep",y="fgood",cuts=c(10000,12000,15000))
+#' smbod=smbinning.factor(train,x="od",y="fgood")
+#' smbhome=smbinning.factor(train,x="home",y="fgood")
+#' smbinc=smbinning.factor.custom(
+#'   train,x="inc",y="fgood",
+#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07'","'W08','W09','W10'"))
+#' 
+# Generate new characteristics and update population dataset
+#' pop=smbinning.gen(pop,smbcbs1,"g1cbs1")
+#' pop=smbinning.factor.gen(pop,smbcbinq,"g1cbinq")
+#' pop=smbinning.gen(pop,smbcblineut,"g1cblineut")
+#' pop=smbinning.factor.gen(pop,smbpmt,"g1pmt")
+#' pop=smbinning.gen(pop,smbtob,"g1tob")
+#' pop=smbinning.factor.gen(pop,smbdpd,"g1dpd")
+#' pop=smbinning.gen(pop,smbdep,"g1dep")
+#' pop=smbinning.factor.gen(pop,smbod,"g1od")
+#' pop=smbinning.factor.gen(pop,smbhome,"g1home")
+#' pop=smbinning.factor.gen(pop,smbinc,"g1inc")
+#' 
+#' # Resample
+#' train=subset(pop,rnd<=0.7) # Training sample
+#' test=subset(pop,rnd>0.7) # Testing sample
 #' 
 #' # Run logistic regression
-#' f=FlagGB~g1CuScore3+g1CuTOB+g1CuDpBal+g1CuDDFq12M+g1CuPOSFq12M+g1CuWealth
+#' f=fgood~g1cbs1+g1cbinq+g1cblineut+g1pmt+g1tob+g1dpd+g1dep+g1od+g1home+g1inc
 #' modlogisticsmb=glm(f,data = train,family = binomial())
 #' summary(modlogisticsmb)
 #' 
-#' # Scaling: From logistic parameters to points
+#' # Example: Scaling from logistic parameters to points
 #' smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
 #' smbscaled$logitscaled # Scaled model
 #' smbscaled$minmaxscore # Expected minimum and maximum Score
 #' smbscaled$parameters # Parameters used for scaling
-#' smbscaled$logitraw # Extract of original logistic regression
+#' summary(smbscaled$logitraw) # Extract of original logistic regression
+#' 
+#' # Example: Generate score from scaled model
+#' pop1=smbinning.scoring.gen(smbscaled=smbscaled, dataset=pop)
+#' 
+#' # Example Generate SQL code from scaled model
+#' smbinning.scoring.sql(smbscaled)
 
 smbinning.scaling=function(logitraw, pdo=20, score=720, odds=99) {
   if(missing(logitraw)){
@@ -1720,50 +1902,11 @@ smbinning.scaling=function(logitraw, pdo=20, score=720, odds=99) {
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame 
 #' with the final Score and additional fields with the points assigned to each characteristic so the user
-#' can see how the final score is calculated.
+#' can see how the final score is calculated. Example shown on \code{smbinning.scaling} section.
 #' @param smbscaled Object generated using \code{smbinning.scaling}.
 #' @param dataset A data frame.
 #' @return The command \code{smbinning.scoring} generates a data frame with the final scaled Score and its
 #' corresponding scaled weights per characteristic.
-#' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
-#' 
-#' # Generate binned variables
-#' smbCuScore3=smbinning(train,x="CuScore3",y="FlagGB")
-#' smbCuTOB=smbinning(train,x="CuTOB",y="FlagGB")
-#' smbCuDpBal=smbinning(train,x="CuDpBal",y="FlagGB")
-#' smbCuDDFq12M=smbinning(train,x="CuDDFq12M",y="FlagGB")
-#' smbCuPOSFq12M=smbinning(train,x="CuPOSFq12M",y="FlagGB")
-#' smbCuWealth=smbinning.factor.custom(
-#'   train,x="CuWealth",y="FlagGB",
-#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
-#'   
-#' # Update dataset
-#' pop=smbinning.gen(pop,smbCuScore3,"g1CuScore3")
-#' pop=smbinning.gen(pop,smbCuTOB,"g1CuTOB")
-#' pop=smbinning.gen(pop,smbCuDpBal,"g1CuDpBal")
-#' pop=smbinning.gen(pop,smbCuDDFq12M,"g1CuDDFq12M")
-#' pop=smbinning.gen(pop,smbCuPOSFq12M,"g1CuPOSFq12M")
-#' pop=smbinning.factor.gen(pop,smbCuWealth,"g1CuWealth")
-#' 
-#' # Resampling
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' 
-#' # Run logistic regression
-#' f=FlagGB~g1CuScore3+g1CuTOB+g1CuDpBal+g1CuDDFq12M+g1CuPOSFq12M+g1CuWealth
-#' modlogisticsmb=glm(f,data = train,family = binomial())
-#' 
-#' # Scaling: From logistic parameters to points
-#' smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
-#' 
-#' # Generate a dataset with scores and points per characteristic
-#' pop1=smbinning.scoring.gen(smbscaled=smbscaled, dataset=pop)
 
 smbinning.scoring.gen=function(smbscaled, dataset) {
   if(missing(smbscaled)){
@@ -1826,52 +1969,13 @@ smbinning.scoring.gen=function(smbscaled, dataset) {
 # End Add Points and Score 20170925 ###########################################
 
 
-# Begin Convert model into a SQL Statement 20170929 ##########################
+# Begin Convert model into a SQL Statement 20171117 ##########################
 #' Generation of SQL Code After Scaled Model
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code 
-#' that creates and updates all variables present in the scaled model.
+#' that creates and updates all variables present in the scaled model. Example shown on \code{smbinning.scaling} section.
 #' @param smbscaled Object generated using \code{smbinning.scaling}.
 #' @return The command \code{smbinning.scoring.sql} generates a SQL code to implement the model the model in SQL.
-#' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
-#' 
-#' # Generate binned variables
-#' smbCuScore3=smbinning(train,x="CuScore3",y="FlagGB")
-#' smbCuTOB=smbinning(train,x="CuTOB",y="FlagGB")
-#' smbCuDpBal=smbinning(train,x="CuDpBal",y="FlagGB")
-#' smbCuDDFq12M=smbinning(train,x="CuDDFq12M",y="FlagGB")
-#' smbCuPOSFq12M=smbinning(train,x="CuPOSFq12M",y="FlagGB")
-#' smbCuWealth=smbinning.factor.custom(
-#'   train,x="CuWealth",y="FlagGB",
-#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
-#'   
-#' # Update dataset
-#' pop=smbinning.gen(pop,smbCuScore3,"g1CuScore3")
-#' pop=smbinning.gen(pop,smbCuTOB,"g1CuTOB")
-#' pop=smbinning.gen(pop,smbCuDpBal,"g1CuDpBal")
-#' pop=smbinning.gen(pop,smbCuDDFq12M,"g1CuDDFq12M")
-#' pop=smbinning.gen(pop,smbCuPOSFq12M,"g1CuPOSFq12M")
-#' pop=smbinning.factor.gen(pop,smbCuWealth,"g1CuWealth")
-#' 
-#' # Resampling
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' 
-#' # Run logistic regression
-#' f=FlagGB~g1CuScore3+g1CuTOB+g1CuDpBal+g1CuDDFq12M+g1CuPOSFq12M+g1CuWealth
-#' modlogisticsmb=glm(f,data = train,family = binomial())
-
-#' # Scaling: From logistic parameters to points
-#' smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
-#' 
-#' # Generate SQL code for implementation in SQL
-#' smbinning.scoring.sql(smbscaled)
 
 smbinning.scoring.sql=function (smbscaled) {
   if(missing(smbscaled)){
@@ -1891,9 +1995,9 @@ smbinning.scoring.sql=function (smbscaled) {
     codecreate=c(codecreate, "alter table TableName add \n") # First line of the sql code
     for (i in 1:length(uniquechctrs)) {
       pointname=paste(uniquechctrs[[i]], "Points", sep="")
-      codecreate=c(codecreate, paste(pointname, "int, \n", sep=' '))
+      codecreate=c(codecreate, paste(pointname, "int not null, \n", sep=' '))
     }
-    codecreate=c(codecreate, paste("Score", "int \n", sep=' '))
+    codecreate=c(codecreate, paste("Score", "int not null \n", sep=' '))
     codecreate=c(codecreate, paste("go \n", sep=' '))
     
     sqlcreate=character()
@@ -1913,7 +2017,7 @@ smbinning.scoring.sql=function (smbscaled) {
       for (j in 1:dim(subdf)[1]) {
         codeupdate=c(codeupdate, paste(" when",
                                        subdf[["Characteristic"]][j],
-                                       paste("= ","'",subdf[["Attribute"]][j],"'",sep=""),
+                                       paste("= ","'",gsub("'","''",subdf[["Attribute"]][j]),"'",sep=""),
                                        "then",
                                        subdf[["Points"]][j],
                                        " \n",
@@ -1939,7 +2043,7 @@ smbinning.scoring.sql=function (smbscaled) {
   }
   return(cat(sqlcreate,sqlupdate))
 }
-# End Convert model intto a SQL Statement 20170929 ############################
+# End Convert model intto a SQL Statement 20171117 ############################
 
 
 # Begin: SQL Code #############################################################
@@ -1950,25 +2054,22 @@ smbinning.scoring.sql=function (smbscaled) {
 #' @param ivout An object generated by \code{smbinning}.
 #' @return A text with the SQL code for binning.
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning)
 #' 
 #' # Example 1: Binning a numeric variable
-#' result=smbinning(df=train,y="FlagGB",x="LnTOB") # Run and save result
+#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
 #' smbinning.sql(result)
 #' 
 #' # Example 2: Binning for a factor variable
-#' result=smbinning.factor(df=train,x="CuWealth",y="FlagGB",maxcat=11)
+#' result=smbinning.factor(df=chileancredit,x="inc",y="fgood",maxcat=11)
 #' smbinning.sql(result)
 #' 
 #' # Example 3: Customized binning for a factor variable
 #' result=smbinning.factor.custom(
-#'   df=train,x="CuWealth",y="FlagGB",
-#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07','W08','W09','W10'"))
+#'   df=chileancredit,x="inc",y="fgood",
+#'   c("'W01','W02'","'W03','W04','W05'",
+#'     "'W06','W07'","'W08','W09','W10'"))
 #' smbinning.sql(result)
 
 smbinning.sql=function(ivout){
@@ -2021,7 +2122,7 @@ smbinning.sql=function(ivout){
 
 
 # Begin Summary IV 20160602 ###############################################
-#' Information value Summary
+#' Information Value Summary
 #'
 #' It gives the user the ability to calculate, in one step, the IV for each characteristic of the dataset.
 #' This function also shows a progress bar so the user can see the status of the process.
@@ -2032,16 +2133,19 @@ smbinning.sql=function(ivout){
 #' with its corresponding IV for those where the calculation is possible, otherwise it will generate a 
 #' missing value (\code{NA}).
 #' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
+#' # Load library and its dataset
+#' library(smbinning)
 #' 
-#' # Summary Information Value (Exploratory)
-#' testiv=smbinning.sumiv(test,y="FlagGB")
+#' # Test sample
+#' test=subset(chileancredit,rnd>0.9) # Training sample
+#' test$rnd=NULL
+#' 
+#' # Example: Information Value Summary
+#' testiv=smbinning.sumiv(test,y="fgood")
 #' testiv
+#'
+#' # Example: Plot of Information Value Summary
+#' smbinning.sumiv.plot(testiv)
 
 smbinning.sumiv = function(df,y){
   # Check data frame and formats
@@ -2085,25 +2189,13 @@ smbinning.sumiv = function(df,y){
 #' Plot Information Value Summary
 #'
 #' It gives the user the ability to plot the Information Value by characteristic.
-#' The chart only shows characteristics with a valid IV.
+#' The chart only shows characteristics with a valid IV. 
+#' Example shown on \code{smbinning.sumiv} section.
 #' @param sumivt A data frame saved after \code{smbinning.sumiv}.
 #' @param cex Optional parameter for the user to control the font size of the characteristics
 #' displayed on the chart. The default value is 0.9
 #' @return The command \code{smbinning.sumiv.plot} returns a plot that shows the IV
 #' for each numeric and factor characteristic in the dataset.
-#' @examples 
-
-#' # Training and testing samples (Just some basic formality for Modeling)
-#' pop=chileancredit # Set population
-#' train=subset(pop,Rnd<=0.7) # Training sample
-#' test=subset(pop,Rnd>0.7) # Testing sample
-#' rm(chileancredit) # Remove original dataset
-#'
-#' # Summary Information Value (Exploratory)
-#' testiv=smbinning.sumiv(test,y="FlagGB") 
-#' 
-#' # Plot IV
-#' smbinning.sumiv.plot(testiv)
 
 smbinning.sumiv.plot=function(sumivt, cex=0.9){
   if (!is.data.frame(sumivt)){ # Check if data.frame
@@ -2132,41 +2224,35 @@ smbinning.sumiv.plot=function(sumivt, cex=0.9){
 # Begin: Chilean Credit Data ##################################################
 #' Chilean Credit Data 
 #'
-#' A loan dataset where the target variable is FlagGB, 
-#' which represents the binary status of default (0) and not default (1) after 12 months.
+#' A simulated dataset where the target variable is fgood, 
+#' which represents the binary status of default (0) and not default (1).
 #'
 #' \itemize{
-#'   \item LnCntRel: Number of owners.
-#'   \item LnTOB: Time on books (months) since open.
-#'   \item LnAutopay: Type of payment.
-#'   \item CuScore1: Credit score 1.
-#'   \item CuScore2: Credit score 2.
-#'   \item CuScore3: Credit score 3.
-#'   \item CuDpBal: Current amount of deposits.
-#'   \item CuFlagSvCD: Number of savings and CDs.
-#'   \item CuLnUnCnt: Number of unsecured loans.
-#'   \item CuLnScCnt: Number of secured loans.
-#'   \item CuMgCnt: Number of Mortgages.
-#'   \item CuTOB: Time on books (months) since first account.
-#'   \item CuDpTOB: Time on books (months) since first deposit account.
-#'   \item CuDpPct12M: Growth of deposits (Percentage) in the last 12 months.
-#'   \item CuDpDiff12M: Growth of deposits (Amount) in the last 12 months.
-#'   \item CuPOSCntAvg12M: Average number of purchases in the last 12 months.
-#'   \item CuPOSAmtAvg12M: Average amount of purchases in the last 12 months.
-#'   \item CuPOSFq12M: Frequency of purchases in the last 12 months.
-#'   \item CuDpAvgBal12M: Average amount of deposits in the last 12 months.
-#'   \item CuDDCntAvg12M: Average number of electronic deposits in the last 12 months.
-#'   \item CuDDAmtAvg12M: Average amount of electronic in the last 12 months.
-#'   \item CuDDFq12M: Frequency of electronic deposits in the last 12 months.
-#'   \item CuWealth: Income level.
-#'   \item CuODRecency: Most recent overdraft.
-#'   \item CuODCnt12M: Average number of overdrafts in the last 12 months.
-#'   \item CuODFq12M: Frequency of overdrafts in the last 12 months.
-#'   \item FlagGB: Default indicator where 0 means default.
-#'   \item Rnd: Random number to select testing and training samples.
+#'   \item fgood: Default (0), Not Default (1).
+#'   \item cbs1: Credit score 1.
+#'   \item cbs2: Credit score 2.
+#'   \item cbs3: Credit score 3.
+#'   \item cbinq: Number of inquiries.
+#'   \item cbline: Number of credit lines.
+#'   \item cbterm: Number of term loans.
+#'   \item cblineut: Line utilization (0-100).
+#'   \item cbtob: Number of years on file.
+#'   \item cbdpd: Indicator of days past due on bureau (Yes, No).
+#'   \item cbnew: Number of new loans.
+#'   \item pmt: Type of payment (M: Manual, A: Autopay, P: Payroll).
+#'   \item tob: Time on books (Years).
+#'   \item dpd: Level of delinquency (No, Low, High).
+#'   \item dep: Amount of deposits own by customer.
+#'   \item dc: Number of debit card transactions.
+#'   \item od: Number of overdrafts.
+#'   \item home: Home ownership indicator (Yes, No).
+#'   \item inc: Level of income.
+#'   \item dd: Number of direct deposits per month.
+#'   \item online: Indicator of active online (Yes, No).
+#'   \item rnd: Random number to select testing and training samples.
 #'   }
 #'
-#' @format Data frame with 18,718 rows and 28 columns.
+#' @format Data frame with 10,000 rows and 22 columns.
 #' @name chileancredit
 NULL
 # End: Chilean Credit Data ####################################################
