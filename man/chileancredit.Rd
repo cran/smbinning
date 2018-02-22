@@ -3,7 +3,7 @@
 \name{chileancredit}
 \alias{chileancredit}
 \title{Chilean Credit Data}
-\format{Data frame with 10,000 rows and 22 columns.}
+\format{Data frame with 10,000 rows and 23 columns.}
 \description{
 A simulated dataset where the target variable is fgood, 
 which represents the binary status of default (0) and not default (1).
@@ -32,5 +32,6 @@ which represents the binary status of default (0) and not default (1).
   \item dd: Number of direct deposits per month.
   \item online: Indicator of active online (Yes, No).
   \item rnd: Random number to select testing and training samples.
+  \item period: Factor that indicates the year/month of the data.
   }
 }
