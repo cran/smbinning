@@ -1686,57 +1686,92 @@ smbinning.plot=function(ivout,option="dist",sub=""){
 #' # Check stability for income
 #' smbinning.psi(df=chileancredit,y="period",x="inc") 
 
-smbinning.psi = function(df,y,x){
-  i=which(names(df)==x)
-  j=which(names(df)==y)
-  if(!is.data.frame(df)){return(stop("Not a data frame"))}
-  else if(identical(i,integer(0))){return(stop(paste("Characteristic",x,"not found")))}
-  else if(identical(j,integer(0))){return(stop(paste("Characteristic",y,"not found")))}
-  else if(class(df[,i])!="factor"){return(stop("x must be formatted as factor"))}
-  else {
-    psicnt=table(df[,i],df[,j],useNA = "ifany") # Table with counts including NA
-    options(scipen=999) # Remove Scientific Notation
-    psipct=prop.table(psicnt, margin=2) # Table with column percentage
-    psimg=psipct # Shell for PSI table
-    n=ncol(psipct) # Number of columns (Periods)
-    m=nrow(psipct) # Number of rowa (Periods)
-    
-    psimg[,1]=0 # Step 1: PSI=0 for first column
-    
-    # PSI Period VS First Period
-    for (k in 2:n){
-      for (l in 1:m){
-        if(psipct[l,1]>0 & psipct[l,k]>0) 
-        {psimg[l,k]=round((psipct[l,k]-psipct[l,1])*log(psipct[l,k]/psipct[l,1]),8)}
-        else {psimg[l,k]=0}
-      }
-    }
-    
-    psimg=rbind(psimg, PSI=colSums(psimg))
-    psimg=as.table(psimg) # Table with Mg PSI
-    psitable=psimg[nrow(psimg),] # Extract total PSI only
-    psitable=as.data.frame(psitable)
-    # Plot
-    psitable$Partition=rownames(psitable) # Create column "Partition"
-    rownames(psitable)=NULL  # Remove rownames
-    names(psitable)=c("PSI","Partition") # Rename columns
-    psitable=psitable[,c("Partition","PSI")] # Reorder
-    
-    maxpsi=max(psitable$PSI)
-    psiylim=ifelse(maxpsi<0.25,0.25,maxpsi)
-    plot(psitable$PSI,
-         main = paste("Stability:",x),
-         xlab = paste("Partition:",y),
-         ylab="PSI",
-         ylim=c(0,psiylim), 
-         pch=19,
-         col="black",
-         xaxt = "n") # Remove x axis values
-    abline(h=0.1,lty=2)
-    abline(h=0.25,lty=2)
-    axis(1,at=1:nrow(psitable),psitable$Partition) # Add period
-    
-    list(psicnt=psicnt,psipct=psipct,psimg=psimg)  
+smbinning.psi = function(df, y, x, type = 1){
+    i = which(names(df) == x)
+    j = which(names(df) == y)
+    if(!is.data.frame(df)){return(stop("Not a data frame"))}
+    else if(identical(i,integer(0))){return(stop(paste("Characteristic",x,"not found")))}
+    else if(identical(j,integer(0))){return(stop(paste("Characteristic",y,"not found")))}
+    else if(class(df[,i])!="factor"){return(stop("x must be formatted as factor"))}
+    else{
+        psicnt=table(df[,i],df[,j],useNA = "ifany") # Table with counts including NA
+        psiall = as.data.frame(prop.table(table(df[, i], useNA = "ifany"))) # prop.table for factor variable
+        options(scipen=999) # Remove Scientific Notation
+        psipct=prop.table(psicnt, margin=2) # Table with column percentage
+        psimg=psipct # Shell for PSI table
+        n=ncol(psipct) # Number of columns (Periods)
+        m=nrow(psipct) # Number of rows (Factors in x column)
+        
+        if(type == 1){
+            psimg[,1]=0 # Step 1: PSI=0 for first column
+            
+            # PSI Period VS First Period
+            for (k in 2:n){
+                for (l in 1:m){
+                    if(psipct[l,1]>0 & psipct[l,k]>0){
+                        psimg[l,k]=round((psipct[l,k]-psipct[l,1])*log(psipct[l,k]/psipct[l,1]),8)
+                    }
+                    else {
+                        psimg[l,k]=0
+                    }
+                }
+            }
+        }
+        else if(type == 2){
+            psimg[,1]=0 # Step 1: PSI=0 for first column
+            
+            # PSI Period VS Previous Period
+            for (k in 2:n){
+                for (l in 1:m){
+                    if(psipct[l, k-1] > 0 & psipct[l, k] > 0){
+                        psimg[l, k] = round((psipct[l, k]-psipct[l, k - 1])*log(psipct[l, k]/psipct[l, k - 1]), 8)
+                    }
+                    else {
+                        psimg[l, k] = 0
+                    }
+                }
+            }
+        }
+        else{
+            # PSI Period VS All Periods
+            for (k in 1:n){
+                for (l in 1:m){
+                    if(psipct[l, k] > 0 & psiall[l, 2] > 0){
+                        psimg[l, k] = round((psipct[l, k] - psiall[l, 2]) * log(psipct[l, k] / psiall[l, 2]), 8)
+                    }
+                    else {
+                        psimg[l, k] = 0
+                    }
+                }
+            }
+        }
+        
+        
+        psimg=rbind(psimg, PSI=colSums(psimg))
+        psimg=as.table(psimg) # Table with Mg PSI
+        psitable=psimg[nrow(psimg),] # Extract total PSI only
+        psitable=as.data.frame(psitable)
+        # Plot
+        psitable$Partition=rownames(psitable) # Create column "Partition"
+        rownames(psitable)=NULL  # Remove rownames
+        names(psitable)=c("PSI","Partition") # Rename columns
+        psitable=psitable[,c("Partition","PSI")] # Reorder
+        
+        maxpsi=max(psitable$PSI)
+        psiylim=ifelse(maxpsi<0.25,0.25,maxpsi)
+        plot(psitable$PSI,
+             main = paste("Stability:",x),
+             xlab = paste("Partition:",y),
+             ylab="PSI",
+             ylim=c(0,psiylim),
+             pch=19,
+             col="black",
+             xaxt = "n") # Remove x axis values
+        abline(h=0.1,lty=2)
+        abline(h=0.25,lty=2)
+        axis(1,at=1:nrow(psitable),psitable$Partition) # Add period
+        
+        list(psicnt=psicnt,psipct=psipct,psimg=psimg)
     }
 }
 
