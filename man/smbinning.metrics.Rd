@@ -4,8 +4,8 @@
 \alias{smbinning.metrics}
 \title{Performance Metrics for a Classification Model}
 \usage{
-smbinning.metrics(dataset, prediction, actualclass, cutoff = NA, report = 1,
-  plot = "none", returndf = 0)
+smbinning.metrics(dataset, prediction, actualclass, cutoff = NA,
+  report = 1, plot = "none", returndf = 0)
 }
 \arguments{
 \item{dataset}{Data frame.}

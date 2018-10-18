@@ -1,8 +1,10 @@
-2dc0efb779034895fd947eb951da3f5e *DESCRIPTION
+663580dc1f1456c1c3762ab16b14b958 *DESCRIPTION
 3b6f31eea22cab66689dce1f70e65773 *NAMESPACE
-114aecafe90d9b5728444d9dd8552ab8 *R/smbinning.R
-95f0da32e5dfeae3fc72ffb802dba0c8 *data/chileancredit.RData
-511b283a76ad0987fd9142545d81e730 *man/chileancredit.Rd
+f4fcef1c7b79a894220b893bc28562a0 *R/smbinning.R
+bc8d2cceb321f3caefb3ea0a96eea618 *data/binmonodf.RData
+258e6bb904c6b1ee1ed4924d589d09d4 *data/chileancredit.RData
+84f24235e1b7443655a2ce0b2bdd725d *man/binmonodf.Rd
+7ec6eaed8c437fca1524d4f3396cfc14 *man/chileancredit.Rd
 57419bb77a70b323caf6ef8a8dd1f91f *man/smbinning.Rd
 b08fdafc77abc461fc23e8b82ef6f6ed *man/smbinning.custom.Rd
 bb9dd3fbc601b0145b96fb8afb32c959 *man/smbinning.eda.Rd
@@ -10,8 +12,9 @@ bb9dd3fbc601b0145b96fb8afb32c959 *man/smbinning.eda.Rd
 c1f46c8ab743ec2cfa49b597490b898b *man/smbinning.factor.custom.Rd
 58737b6858adeb73649a8abcae698217 *man/smbinning.factor.gen.Rd
 efaabbf2640349eca8106823992862ae *man/smbinning.gen.Rd
-dc1a2b42c42f4118cdbe0e22ce523b64 *man/smbinning.metrics.Rd
+8b3cfd9e3be8fa0fc6dbee21c6b0cccb *man/smbinning.metrics.Rd
 178c03674df941362284dcff93e534d6 *man/smbinning.metrics.plot.Rd
+612c7b26f8e1403f2f3fadf45b7ec545 *man/smbinning.monotonic.Rd
 fd87673634408a73744d20ee6279fc46 *man/smbinning.plot.Rd
 bccffa8f304bc63d147f715b54cebd98 *man/smbinning.psi.Rd
 1780c41bfabe2e8443dc3189f440b5db *man/smbinning.scaling.Rd

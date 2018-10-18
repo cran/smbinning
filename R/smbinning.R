@@ -1576,6 +1576,87 @@ smbinning.metrics.plot=function(df,cutoff=NA, plot="cmactual"){
 # End: Metrics Plot 20171022 #############################################
 
 
+# Ini Monotonic Binning 20181016 #########################################
+#' Monotonic Binning
+#'
+#' It gives the user the ability to impose a monotonic trend for good/bad rates per bin.
+#' @param df A data frame.
+#' @param y Binary response variable (0,1). Integer (\code{int}) is required.
+#' Name of \code{y} must not have a dot. Name "default" is not allowed.
+#' @param x Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed. 
+#' Name of \code{x} must not have a dot.
+#' @param p Percentage of records per bin. Default 5\% (0.05). 
+#' @return The command \code{smbinning.monotonic} generates and object containing the necessary info and utilities for binning.
+#' The user should save the output result so it can be used 
+#' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
+#' @examples
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
+#' 
+#' # Example 1: Monotonic Binning (Increasing Good Rate per Bin)
+#' smbinning(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
+#'  
+#' # Example 2: Monotonic Binning (Decreasing Good Rate per Bin)
+#' smbinning(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
+
+smbinning.monotonic=function(df,y,x,p=0.05) { # Ini function monotonic
+  
+  i=which(names(df)==y) # Column for y
+  j=which(names(df)==x) # Column for x
+  
+  result=smbinning(df, y, x, p) # Save result from usual binning
+  c=cor(df[,i],df[,j],use = "complete.obs", method = c("pearson"))
+  col=if(c>0) {9} else {10} # Increasing (Column 9 Good Rate) or Decreasing (Column 10 Bad Rate)?
+  
+  if(result$iv<0.1) {return("Not Meaningful (IV<0.1)")} 
+  
+  else { # Ini condition
+    
+    # Get relevant data
+    ivtable=result$ivtable
+    ratevalues=ivtable[,col] # Column 9 for increasing (Good Rate), 10 for decreasing (Bad Rate)
+    ratevalues=ratevalues[1:(length(ratevalues)-2)] # Excludes total and missing
+    ratecuts=result$cuts
+    
+    # Start WHILE Loop
+    count=0
+    iter=0
+    
+    while(count<1) {
+      
+      # If last bin not follow trend, change it the previous bin
+      i=length(ratevalues)-1
+      ratecuts[i]=ifelse(ratevalues[i+1]<ratevalues[i], ratecuts[i-1],ratecuts[i])
+      # If next bin (i+1) lower than previous (i) then merge 
+      for (i in 1:length(ratevalues)-1) {
+        ratecuts[i]=ifelse(ratevalues[i+1]<ratevalues[i], ratecuts[i+1],ratecuts[i])
+      }
+      
+      # Make unique bin values
+      ratecuts=unique(ratecuts)
+      ratecuts=ratecuts[!is.na(ratecuts)]
+      
+      result=smbinning.custom(df, y, x, ratecuts)
+      ivtable=result$ivtable
+      ratevalues=ivtable[,col]
+      ratevalues=ratevalues[1:(length(ratevalues)-2)] # Excludes total and missing
+      
+      iter=iter+1 # Number of iterations
+      
+      count=if(all(ratevalues==cummax(ratevalues))==FALSE) {0} else{1}
+      
+    }
+  } # End condition
+  
+  return(result)
+  
+} # End function monotonic
+
+# End Monotonic Binning 20181016 #########################################
+
+
 # Begin Plotting ##############################################################
 #' Plots after binning
 #'
@@ -2295,6 +2376,25 @@ smbinning.sumiv.plot=function(sumivt, cex=0.9){
 
 # End Plot Summary IV 20160602 ############################################
 
+# Begin: Monotonic Sample Data ############################################
+#' Monotonic Binning Sample Data 
+#'
+#' A simulated dataset used to illustrate the application of monotonic binning.
+#'
+#' \itemize{
+#'   \item fgood1: Default (0), Not Default (1) for Numeric Variable 1.
+#'   \item chr1: Numeric variable 1.
+#'   \item fgood2: Default (0), Not Default (1) for Numeric Variable 2.
+#'   \item chr2: Numeric variable 2.
+#'   \item fgood3: Default (0), Not Default (1) for Numeric Variable 3.
+#'   \item chr3: Numeric variable 3.
+#'   }
+#'
+#' @format Data frame with 5,000 rows and 6 columns.
+#' @name binmonodf
+NULL
+# End: Monotonic Sample Data ############################################
+
 
 # Begin: Chilean Credit Data ##################################################
 #' Chilean Credit Data 
@@ -2328,7 +2428,7 @@ smbinning.sumiv.plot=function(sumivt, cex=0.9){
 #'   \item period: Factor that indicates the year/month of the data.
 #'   }
 #'
-#' @format Data frame with 10,000 rows and 23 columns.
+#' @format Data frame with 5,000 rows and 23 columns.
 #' @name chileancredit
 NULL
 # End: Chilean Credit Data ####################################################

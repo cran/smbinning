@@ -3,7 +3,7 @@
 \name{chileancredit}
 \alias{chileancredit}
 \title{Chilean Credit Data}
-\format{Data frame with 10,000 rows and 23 columns.}
+\format{Data frame with 5,000 rows and 23 columns.}
 \description{
 A simulated dataset where the target variable is fgood, 
 which represents the binary status of default (0) and not default (1).

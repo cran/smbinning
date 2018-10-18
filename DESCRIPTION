@@ -1,22 +1,22 @@
 Package: smbinning
 Title: Scoring Modeling and Optimal Binning
-Version: 0.6
+Version: 0.7
 Author: Herman Jopia
 Maintainer: Herman Jopia <hjopia@gmail.com>
-URL: http://www.scoringmodeling.com
 Description: A set of functions to build a scoring model from beginning to end, leading the user
 	to follow an efficient and organized development process, reducing significantly the time
 	spent on data exploration, variable selection, feature engineering and binning, among other 
 	recurrent tasks. 
-	The package also incorporates scaling capabilities that transforms logistic coefficients
-	into points for a better business understanding and calculates and visualizes classic performance
-	metrics of a classification model.
+	The package also incorporates monotonic and customized binning, scaling capabilities that 
+	transforms logistic coefficients into points for a better business understanding and 
+	calculates and visualizes classic performance metrics of a classification model.
 Depends: R (>= 3.4.0),sqldf,partykit,Formula
 Imports: gsubfn
 License: GPL (>= 2)
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
+Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2018-02-22 08:56:12 UTC; Owner
+Packaged: 2018-10-18 05:50:58 UTC; hjopi
 Repository: CRAN
-Date/Publication: 2018-02-22 09:12:16 UTC
+Date/Publication: 2018-10-18 06:20:03 UTC
