@@ -29,5 +29,5 @@ using the first one as the reference.
 library(smbinning)
 
 # Check stability for income
-smbinning.psi(df=chileancredit,y="period",x="inc") 
+smbinning.psi(df=smbsimdf1,y="period",x="inc") 
 }

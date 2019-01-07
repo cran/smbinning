@@ -30,10 +30,10 @@ It gives the user the ability to impose a monotonic trend for good/bad rates per
 library(smbinning) # Load package and its data
 
 # Example 1: Monotonic Binning (Increasing Good Rate per Bin)
-smbinning(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
-smbinning.monotonic(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
+smbinning(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
+smbinning.monotonic(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
  
 # Example 2: Monotonic Binning (Decreasing Good Rate per Bin)
-smbinning(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
-smbinning.monotonic(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
+smbinning(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
+smbinning.monotonic(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
 }

@@ -29,7 +29,7 @@ based on the following three parameters pre-selected by the analyst: PDO, Score,
 library(smbinning)
 
 # Sampling
-pop=chileancredit # Population
+pop=smbsimdf1 # Population
 train=subset(pop,rnd<=0.7) # Training sample
 
 # Generate binning object to generate variables

@@ -37,7 +37,7 @@ process for the calculation of the \emph{Information Value}.
 library(smbinning) # Load package and its data
 
 # Example: Optimal binning
-result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
+result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
 result$ivtable # Tabulation and Information Value
 result$iv # Information value
 result$bands # Bins or bands

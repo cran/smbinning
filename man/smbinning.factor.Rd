@@ -30,6 +30,6 @@ It generates a table with relevant metrics for all the categories of a given fac
 library(smbinning) # Load package and its data
 
 # Binning a factor variable
-result=smbinning.factor(chileancredit,x="inc",y="fgood", maxcat=11)
+result=smbinning.factor(smbsimdf1,x="inc",y="fgood", maxcat=11)
 result$ivtable
 }

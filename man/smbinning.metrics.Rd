@@ -37,17 +37,17 @@ from the classification matrix at a specific threshold or cutoff.
 library(smbinning) # Load package and its data
 
 # Example: Metrics Credit Score 1
-smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
                   report=1) # Show report
-smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
                   cutoff=600, report=1) # User cutoff
-smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
                   report=0, plot="auc") # Plot AUC
-smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
                   report=0, plot="ks") # Plot KS
 
 # Save table with all details of metrics
 cbs1metrics=smbinning.metrics(
-  dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+  dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
   report=0, returndf=1) # Save metrics details
 }

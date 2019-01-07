@@ -35,7 +35,7 @@ library(smbinning) # Load package and its data
 # Example: Customized binning for a factor variable
 # Notation: Groups between double quotes
 result=smbinning.factor.custom(
-  chileancredit,x="inc",
+  smbsimdf1,x="inc",
   y="fgood",
   c("'W01','W02'",        # Group 1
     "'W03','W04','W05'",  # Group 2

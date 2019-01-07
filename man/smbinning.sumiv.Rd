@@ -26,7 +26,7 @@ This function also shows a progress bar so the user can see the status of the pr
 library(smbinning)
 
 # Test sample
-test=subset(chileancredit,rnd>0.9) # Training sample
+test=subset(smbsimdf1,rnd>0.9) # Training sample
 test$rnd=NULL
 
 # Example: Information Value Summary

@@ -19,7 +19,7 @@ It generates four plots after running and saving the output report from \code{sm
 \examples{
 # Load library and its dataset
 library(smbinning)
-smbmetricsdf=smbinning.metrics(dataset=chileancredit, prediction="cbs1",
+smbmetricsdf=smbinning.metrics(dataset=smbsimdf1, prediction="cbs1",
                                actualclass="fgood", returndf=1)
 
 # Example 1: Plots based on optimal cutoff

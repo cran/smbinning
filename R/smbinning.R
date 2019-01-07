@@ -22,7 +22,7 @@
 #' library(smbinning) # Load package and its data
 #' 
 #' # Example: Optimal binning
-#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
+#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
 #' result$ivtable # Tabulation and Information Value
 #' result$iv # Information value
 #' result$bands # Bins or bands
@@ -243,11 +243,11 @@ smbinning = function(df,y,x,p=0.05){
 #' library(smbinning) # Load package and its data
 #' 
 #' # Custom cutpoints using percentiles (20% each)
-#' cbs1cuts=as.vector(quantile(chileancredit$cbs1, probs=seq(0,1,0.2), na.rm=TRUE)) # Quantiles
+#' cbs1cuts=as.vector(quantile(smbsimdf1$cbs1, probs=seq(0,1,0.2), na.rm=TRUE)) # Quantiles
 #' cbs1cuts=cbs1cuts[2:(length(cbs1cuts)-1)] # Remove first (min) and last (max) values
 #' 
 #' # Example: Customized binning
-#' result=smbinning.custom(df=chileancredit,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
+#' result=smbinning.custom(df=smbsimdf1,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
 #' result$ivtable # Tabulation and Information Value
 
 smbinning.custom = function(df,y,x,cuts){
@@ -470,8 +470,8 @@ smbinning.custom = function(df,y,x,cuts){
 #' library(smbinning) # Load package and its data
 #' 
 #' # Example: Exploratory data analysis of dataset
-#' smbinning.eda(chileancredit,rounding=3)$eda # Table with basic statistics
-#' smbinning.eda(chileancredit,rounding=3)$edapct # Table with basic percentages
+#' smbinning.eda(smbsimdf1,rounding=3)$eda # Table with basic statistics
+#' smbinning.eda(smbsimdf1,rounding=3)$edapct # Table with basic percentages
 
 smbinning.eda = function(df, rounding=3, pbar=1){
   # Check data frame and formats
@@ -591,7 +591,7 @@ smbinning.eda = function(df, rounding=3, pbar=1){
 #' library(smbinning) # Load package and its data
 #'
 #' # Binning a factor variable
-#' result=smbinning.factor(chileancredit,x="inc",y="fgood", maxcat=11)
+#' result=smbinning.factor(smbsimdf1,x="inc",y="fgood", maxcat=11)
 #' result$ivtable
 
 smbinning.factor = function(df,y,x,maxcat=10){
@@ -785,7 +785,7 @@ smbinning.factor = function(df,y,x,maxcat=10){
 #' # Example: Customized binning for a factor variable
 #' # Notation: Groups between double quotes
 #' result=smbinning.factor.custom(
-#'   chileancredit,x="inc",
+#'   smbsimdf1,x="inc",
 #'   y="fgood",
 #'   c("'W01','W02'",        # Group 1
 #'     "'W03','W04','W05'",  # Group 2
@@ -956,7 +956,7 @@ smbinning.factor.custom = function(df,y,x,groups){
 #' @examples 
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
-#' pop=chileancredit # Set population
+#' pop=smbsimdf1 # Set population
 #' train=subset(pop,rnd<=0.7) # Training sample
 #' 
 #' # Binning a factor variable on training data
@@ -1013,7 +1013,14 @@ smbinning.factor.gen=function(df,ivout,chrname="NewChar"){
     }
   }
   
-  # Are there ANY missing values
+  # If for any reason #bins in test sample are different, error
+  if(any(is.na(df[,col_id]))==F & length(blab)>length(unique(df[,ncol])))
+  {stop("Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample.")}
+  
+  if(any(is.na(df[,col_id]))==T & length(blab)>=length(unique(df[,ncol])))
+  {stop("Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample.")}
+  
+    # Are there ANY missing values
   # any(is.na(df[,col_id]))
   
   if (any(is.na(df[,col_id]))){
@@ -1044,7 +1051,7 @@ smbinning.factor.gen=function(df,ivout,chrname="NewChar"){
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
-#' pop=chileancredit # Set population
+#' pop=smbsimdf1 # Set population
 #' train=subset(pop,rnd<=0.7) # Training sample
 #' 
 #' # Binning application for a numeric variable
@@ -1078,7 +1085,16 @@ smbinning.gen=function(df,ivout,chrname="NewChar"){
       blab=c(blab,paste(sprintf("%02d",i-1),"<=",b[i]))
     }
   } else {i=2}
+  
+  # Labels computed with training sample
   blab=c(blab,paste(sprintf("%02d",i),">",b[length(b)-1]))
+  
+  # If for any reason #bins in test sample are different, error
+  if(any(is.na(df[,col_id]))==F & length(blab)>length(unique(df[,ncol])))
+  {stop("Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample.")}
+  
+  if(any(is.na(df[,col_id]))==T & length(blab)>=length(unique(df[,ncol])))
+  {stop("Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample.")}
   
   # Are there ANY missing values
   # any(is.na(df[,col_id]))
@@ -1115,18 +1131,18 @@ smbinning.gen=function(df,ivout,chrname="NewChar"){
 #' library(smbinning) # Load package and its data
 #' 
 #' # Example: Metrics Credit Score 1
-#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'                   report=1) # Show report
-#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'                   cutoff=600, report=1) # User cutoff
-#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'                   report=0, plot="auc") # Plot AUC
-#' smbinning.metrics(dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'                   report=0, plot="ks") # Plot KS
 #'
 #' # Save table with all details of metrics
 #' cbs1metrics=smbinning.metrics(
-#'   dataset=chileancredit,prediction="cbs1",actualclass="fgood",
+#'   dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'   report=0, returndf=1) # Save metrics details
 
 smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plot="none", returndf=0){
@@ -1401,7 +1417,7 @@ smbinning.metrics=function(dataset,prediction,actualclass,cutoff=NA,report=1,plo
 #' @examples 
 #' # Load library and its dataset
 #' library(smbinning)
-#' smbmetricsdf=smbinning.metrics(dataset=chileancredit, prediction="cbs1",
+#' smbmetricsdf=smbinning.metrics(dataset=smbsimdf1, prediction="cbs1",
 #'                                actualclass="fgood", returndf=1)
 #' 
 #' # Example 1: Plots based on optimal cutoff
@@ -1594,12 +1610,12 @@ smbinning.metrics.plot=function(df,cutoff=NA, plot="cmactual"){
 #' library(smbinning) # Load package and its data
 #' 
 #' # Example 1: Monotonic Binning (Increasing Good Rate per Bin)
-#' smbinning(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
-#' smbinning.monotonic(df=binmonodf,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
+#' smbinning(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
 #'  
 #' # Example 2: Monotonic Binning (Decreasing Good Rate per Bin)
-#' smbinning(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
-#' smbinning.monotonic(df=binmonodf,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
+#' smbinning(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
 
 smbinning.monotonic=function(df,y,x,p=0.05) { # Ini function monotonic
   
@@ -1670,9 +1686,9 @@ smbinning.monotonic=function(df,y,x,p=0.05) { # Ini function monotonic
 #' library(smbinning)
 #' 
 #' # Example 1: Numeric variable (1 page, 4 plots)
-#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
+#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
 #' par(mfrow=c(2,2))
-#' boxplot(chileancredit$cbs1~chileancredit$fgood,
+#' boxplot(smbsimdf1$cbs1~smbsimdf1$fgood,
 #'         horizontal=TRUE, frame=FALSE, col="lightgray",main="Distribution")
 #' mtext("Credit Score",3)
 #' smbinning.plot(result,option="dist",sub="Credit Score")
@@ -1681,7 +1697,7 @@ smbinning.monotonic=function(df,y,x,p=0.05) { # Ini function monotonic
 #' par(mfrow=c(1,1))
 #' 
 #' # Example 2: Factor variable (1 plot per page)
-#' result=smbinning.factor(df=chileancredit,y="fgood",x="inc",maxcat=11)
+#' result=smbinning.factor(df=smbsimdf1,y="fgood",x="inc",maxcat=11)
 #' smbinning.plot(result,option="dist",sub="Income Level")
 #' smbinning.plot(result,option="badrate",sub="Income Level")
 #' smbinning.plot(result,option="WoE",sub="Income Level")
@@ -1765,7 +1781,7 @@ smbinning.plot=function(ivout,option="dist",sub=""){
 #' library(smbinning)
 #'
 #' # Check stability for income
-#' smbinning.psi(df=chileancredit,y="period",x="inc") 
+#' smbinning.psi(df=smbsimdf1,y="period",x="inc") 
 
 smbinning.psi = function(df,y,x){
   i=which(names(df)==x)
@@ -1840,7 +1856,7 @@ smbinning.psi = function(df,y,x){
 #' library(smbinning)
 #' 
 #' # Sampling
-#' pop=chileancredit # Population
+#' pop=smbsimdf1 # Population
 #' train=subset(pop,rnd<=0.7) # Training sample
 #' 
 #' # Generate binning object to generate variables
@@ -2214,16 +2230,16 @@ smbinning.scoring.sql=function (smbscaled) {
 #' library(smbinning)
 #' 
 #' # Example 1: Binning a numeric variable
-#' result=smbinning(df=chileancredit,y="fgood",x="cbs1") # Run and save result
+#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
 #' smbinning.sql(result)
 #' 
 #' # Example 2: Binning for a factor variable
-#' result=smbinning.factor(df=chileancredit,x="inc",y="fgood",maxcat=11)
+#' result=smbinning.factor(df=smbsimdf1,x="inc",y="fgood",maxcat=11)
 #' smbinning.sql(result)
 #' 
 #' # Example 3: Customized binning for a factor variable
 #' result=smbinning.factor.custom(
-#'   df=chileancredit,x="inc",y="fgood",
+#'   df=smbsimdf1,x="inc",y="fgood",
 #'   c("'W01','W02'","'W03','W04','W05'",
 #'     "'W06','W07'","'W08','W09','W10'"))
 #' smbinning.sql(result)
@@ -2293,7 +2309,7 @@ smbinning.sql=function(ivout){
 #' library(smbinning)
 #' 
 #' # Test sample
-#' test=subset(chileancredit,rnd>0.9) # Training sample
+#' test=subset(smbsimdf1,rnd>0.9) # Training sample
 #' test$rnd=NULL
 #' 
 #' # Example: Information Value Summary
@@ -2376,6 +2392,43 @@ smbinning.sumiv.plot=function(sumivt, cex=0.9){
 
 # End Plot Summary IV 20160602 ############################################
 
+
+# Ini: Simulated Credit Data ##############################################
+#' Simulated Credit Data 
+#'
+#' A simulated dataset where the target variable is fgood, 
+#' which represents the binary status of default (0) and not default (1).
+#'
+#' \itemize{
+#'   \item fgood: Default (0), Not Default (1).
+#'   \item cbs1: Credit quality index (1-100).
+#'   \item cbs2: Profitability index (1-100).
+#'   \item cbinq: Number of inquiries.
+#'   \item cbline: Number of credit lines.
+#'   \item cbterm: Number of term loans.
+#'   \item cblineut: Line utilization (0-100).
+#'   \item cbtob: Number of years on file.
+#'   \item cbdpd: Indicator of days past due on bureau (Yes, No).
+#'   \item cbnew: Number of new loans.
+#'   \item pmt: Type of payment (M: Manual, A: Autopay, P: Payroll).
+#'   \item tob: Time on books (Years).
+#'   \item dpd: Level of delinquency (No, Low, High).
+#'   \item dep: Amount of deposits.
+#'   \item dc: Number of transactions.
+#'   \item od: Number of overdrafts.
+#'   \item home: Home ownership indicator (Yes, No).
+#'   \item inc: Level of income.
+#'   \item dd: Number of electronic transfers.
+#'   \item online: Indicator of online activity (Yes, No).
+#'   \item rnd: Random number to select testing and training samples.
+#'   \item period: Factor that indicates the year/month of the data (Based on rnd).
+#'   }
+#'
+#' @format Data frame with 2,500 rows and 22 columns with 500 defaults.
+#' @name smbsimdf1
+NULL
+# End: Simulated Credit Data ##############################################
+
 # Begin: Monotonic Sample Data ############################################
 #' Monotonic Binning Sample Data 
 #'
@@ -2390,45 +2443,7 @@ smbinning.sumiv.plot=function(sumivt, cex=0.9){
 #'   \item chr3: Numeric variable 3.
 #'   }
 #'
-#' @format Data frame with 5,000 rows and 6 columns.
-#' @name binmonodf
+#' @format Data frame with 2,500 rows and 6 columns.
+#' @name smbsimdf2
 NULL
 # End: Monotonic Sample Data ############################################
-
-
-# Begin: Chilean Credit Data ##################################################
-#' Chilean Credit Data 
-#'
-#' A simulated dataset where the target variable is fgood, 
-#' which represents the binary status of default (0) and not default (1).
-#'
-#' \itemize{
-#'   \item fgood: Default (0), Not Default (1).
-#'   \item cbs1: Credit score 1.
-#'   \item cbs2: Credit score 2.
-#'   \item cbs3: Credit score 3.
-#'   \item cbinq: Number of inquiries.
-#'   \item cbline: Number of credit lines.
-#'   \item cbterm: Number of term loans.
-#'   \item cblineut: Line utilization (0-100).
-#'   \item cbtob: Number of years on file.
-#'   \item cbdpd: Indicator of days past due on bureau (Yes, No).
-#'   \item cbnew: Number of new loans.
-#'   \item pmt: Type of payment (M: Manual, A: Autopay, P: Payroll).
-#'   \item tob: Time on books (Years).
-#'   \item dpd: Level of delinquency (No, Low, High).
-#'   \item dep: Amount of deposits own by customer.
-#'   \item dc: Number of debit card transactions.
-#'   \item od: Number of overdrafts.
-#'   \item home: Home ownership indicator (Yes, No).
-#'   \item inc: Level of income.
-#'   \item dd: Number of direct deposits per month.
-#'   \item online: Indicator of active online (Yes, No).
-#'   \item rnd: Random number to select testing and training samples.
-#'   \item period: Factor that indicates the year/month of the data.
-#'   }
-#'
-#' @format Data frame with 5,000 rows and 23 columns.
-#' @name chileancredit
-NULL
-# End: Chilean Credit Data ####################################################

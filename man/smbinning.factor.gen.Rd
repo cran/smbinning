@@ -23,7 +23,7 @@ It generates a data frame with a new predictive characteristic from a factor var
 \examples{
 # Load library and its dataset
 library(smbinning) # Load package and its data
-pop=chileancredit # Set population
+pop=smbsimdf1 # Set population
 train=subset(pop,rnd<=0.7) # Training sample
 
 # Binning a factor variable on training data

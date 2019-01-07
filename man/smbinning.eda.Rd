@@ -44,6 +44,6 @@ The report includes:
 library(smbinning) # Load package and its data
 
 # Example: Exploratory data analysis of dataset
-smbinning.eda(chileancredit,rounding=3)$eda # Table with basic statistics
-smbinning.eda(chileancredit,rounding=3)$edapct # Table with basic percentages
+smbinning.eda(smbsimdf1,rounding=3)$eda # Table with basic statistics
+smbinning.eda(smbsimdf1,rounding=3)$edapct # Table with basic percentages
 }
