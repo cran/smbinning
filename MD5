@@ -1,8 +1,9 @@
-73b829e4c659de2d69b31fc0077541c2 *DESCRIPTION
+551253cd0dad5d99a4ef55b9e8cb317c *DESCRIPTION
 3b6f31eea22cab66689dce1f70e65773 *NAMESPACE
-8a4df48e39f0dbcdf7408b36787cb169 *R/smbinning.R
+1a51901ce156315b0afec2062e04c021 *R/smbinning.R
 36b38fd29121bff23ed0f6bc052a97cd *data/smbsimdf1.RData
 d6224dfbe5cca2ace25aeca8a352d31e *data/smbsimdf2.RData
+b2341ecc872afe977ea2f109dd153449 *data/smbsimdf3.RData
 250f117ea9f60482fb9c7c92f0784d33 *man/smbinning.Rd
 28cbea342c84556365669ac8a2463d6f *man/smbinning.custom.Rd
 ab2287f2ec02d63d3500defc952c37b2 *man/smbinning.eda.Rd
@@ -10,6 +11,7 @@ ab2287f2ec02d63d3500defc952c37b2 *man/smbinning.eda.Rd
 e584b8c87c8ae85a3719832751b61eed *man/smbinning.factor.custom.Rd
 86d8775a970b43cf7e91c094f8bbbc2f *man/smbinning.factor.gen.Rd
 8ed8e4631e1d1bbbedd1e1a398c88587 *man/smbinning.gen.Rd
+e341812e77bc54ec19527fd3297e2be3 *man/smbinning.logitrank.Rd
 b3def04d1397dc436f4182c46bf4e5fd *man/smbinning.metrics.Rd
 9c2118e13ca6eb625552bb6ed92faad8 *man/smbinning.metrics.plot.Rd
 03035552b77726c458ff4f0df6e1fbd8 *man/smbinning.monotonic.Rd
@@ -23,3 +25,4 @@ e7dcd3377fe9a26b13af7d73435e0a1f *man/smbinning.sumiv.Rd
 3f5661d006e90b10095efdee672d8abf *man/smbinning.sumiv.plot.Rd
 e0b466388d9f7628eea3ccb37bef8cb1 *man/smbsimdf1.Rd
 317297c881f8ffe88e17777b5a9a21f0 *man/smbsimdf2.Rd
+12b0ef64b83a36a23360278d16685d6f *man/smbsimdf3.Rd

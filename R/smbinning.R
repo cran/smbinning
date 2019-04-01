@@ -1110,6 +1110,69 @@ smbinning.gen=function(df,ivout,chrname="NewChar"){
 # End Gen Characteristic #######################################################
 
 
+# Ini Logit Rank 20190329 #####################################################
+#' Logistic Regression Ranking
+#'
+#' It runs all the possible logistic models for a given set of characteristics (\code{chr}) and then rank them
+#' from highest to lowest performance based on AIC.
+#' Important Note: This function may take time depending on the datset size and number of variables used in it.
+#' The user should run it at the end of the modeling process once variables have been pre-selected in previous steps.   
+#' @param df Data frame.
+#' @param y Binary dependent variable.
+#' @param chr Vector with the characteristics (independent variables).
+#' @return The command \code{smbinning.logitrank} returns a table with the combination of characteristics 
+#' and their corresponding AIC and deviance. The table is ordered by AIC from lowest (best) to highest.
+#' @examples 
+#' # Load library and its dataset
+#' library(smbinning) # Load package and its data
+#' 
+#' # Example: Best combination of characteristics
+#' smbinning.logitrank(y="fgood",chr=c("chr1","chr2","chr3"),df=smbsimdf3)
+
+smbinning.logitrank = function(y,chr,df){
+  f=c() # Initialize empty list of formulas
+  att=c() # Initialize empty list of characteristics in each formula
+  for(k in 1:length(chr)) {
+    v=t(combn(chr,k))
+    nrow=nrow(v)
+    ncol=ncol(v)
+    fnext=c() # Empty list for 1 set of combinations
+    attnext=c() # Empty list for 1 set of characteristics
+    for (j in 1:nrow){
+      ftmp=paste0(y," ~ ",v[j,1])
+      atttmp=v[j,1]
+      if (ncol>1){
+        for (i in 2:ncol){
+          ftmp=paste0(ftmp,paste0("+",c(v[j,])[i]))
+          atttmp=paste0(atttmp,paste0("+",c(v[j,])[i]))
+        } # End columns
+      } # End if more than 1 column
+      fnext=c(ftmp,fnext)
+      attnext=c(atttmp,attnext)
+    } # End rows
+    f=c(f,fnext)
+    att=c(att,attnext)
+  } 
+  # List attributes
+  chrsum=data.frame(character(0),numeric(0),numeric(0))
+  model=glm(paste0(y," ~ 1"),family=binomial(link='logit'),data=df) # Intercept Only
+  chrsum=rbind(chrsum,cbind(c("Intercept Only"),c(model$aic),c(model$deviance)))
+  for(i in 1:length(f)) {
+    model=glm(f[i],family=binomial(link='logit'),data=df)
+    chrsum=rbind(chrsum,cbind(c(att[i]),c(model$aic),c(model$deviance)))
+  }
+  colnames(chrsum)=c("Characteristics","AIC","Deviance")
+  chrsum$AIC=as.numeric(as.character(chrsum$AIC))
+  chrsum$Deviance=as.numeric(as.character(chrsum$Deviance))
+  chrsum=chrsum[order(chrsum$AIC),] 
+  
+  return(chrsum)
+}
+
+
+# Ini Logit Rank 20190329 #####################################################
+
+
 # Begin Metrics 20171009 ######################################################
 #' Performance Metrics for a Classification Model
 #'
@@ -2446,4 +2509,24 @@ NULL
 #' @format Data frame with 2,500 rows and 6 columns.
 #' @name smbsimdf2
 NULL
-# End: Monotonic Sample Data ############################################
+# End: Monotonic Sample Data ##############################################
+
+
+# Begin: Model Ranking Sample Data ########################################
+#' Monotonic Binning Sample Data 
+#'
+#' A simulated dataset used to illustrate the application of model ranking.
+#'
+#' \itemize{
+#'   \item fgood1: Default (0), Not Default (1) for Numeric Variable 1.
+#'   \item chr1: Numeric variable 1.
+#'   \item chr2: Numeric variable 2.
+#'   \item chr3: Numeric variable 3.
+#'   }
+#'
+#' @format Data frame with 1,000 rows and 4 columns.
+#' @name smbsimdf3
+NULL
+# End: Model Ranking Sample Data ##########################################
+
+
